@@ -1,44 +1,84 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sample Site</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <style>
-        .game-container { margin: 20px; padding: 20px; }
-        .typing-area {
-            width: 80%;
-            height: 100px;
-            margin: 20px auto;
-            font-size: 18px;
-        }
-        .stats { margin: 20px; }
-        .control-panel { margin: 10px; }
-    </style>
-</head>
-<body>
-<header>
-    <nav class="navbar bg-body-tertiary fixed-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="index.html">Sample Site</a>
-        </div>
-    </nav>
-</header>
-<main>
-    <div class="container mt-5 py-5">
-        <div class="row">
-            <h2>About</h2>
-            <p>ここにテキストが入ります。ここにテキストが入ります。ここにテキストが入ります。ここにテキストが入ります。</p>
-            <p>ここにテキストが入ります。ここにテキストが入ります。ここにテキストが入ります。ここにテキストが入ります。</p>
-            <p>ここにテキストが入ります。ここにテキストが入ります。ここにテキストが入ります。ここにテキストが入ります。</p>
-        </div>
-    </div>
-</main>
-<footer class="py-3 fixed-bottom bg-body-tertiary">
-  <div class="text-center">
-    <span class="text-body-secondary">© Sample Site</span>
-  </div>
-</footer>
+<!-- FILE: about.html -->
+const sec = (performance.now() - startTime)/1000;
+timeEl.textContent = sec.toFixed(1);
+const minutes = sec/60;
+const wpm = minutes>0 ? Math.round((correct/5)/minutes) : 0;
+wpmEl.textContent = wpm;
+}
+
+
+function updateStatus(){
+typedEl.textContent = idx;
+correctEl.textContent = correct;
+wrongEl.textContent = wrong;
+const pct = target.length ? Math.round((idx/target.length)*100) : 0;
+meterBar.style.width = pct + '%';
+}
+
+
+hiddenInput.addEventListener('input', (e)=>{
+if(!target) return;
+const value = e.target.value;
+// compare last character
+const last = value[value.length-1];
+if(typeof last === 'undefined') return;
+const expected = target[idx];
+if(last === expected){
+correct++; idx++; // mark correct
+// mark span
+const span = textView.querySelector(`span[data-i='${idx-1}']`);
+if(span) span.classList.add('correct');
+} else {
+wrong++;
+// flash the current character
+const span = textView.querySelector(`span[data-i='${idx}']`);
+if(span){ span.classList.add('wrong'); setTimeout(()=>span.classList.remove('wrong'),200); }
+}
+// keep only last char in the input so we compare char-by-char
+e.target.value = '';
+updateStatus();
+// complete
+if(idx >= target.length){
+clearInterval(timerId); timerId = null; updateTimer(); alert('完了！');
+}
+});
+
+
+// file load
+document.getElementById('loadFileBtn').addEventListener('click',()=>fileInput.click());
+fileInput.addEventListener('change', (ev)=>{
+const f = ev.target.files[0];
+if(!f) return;
+const reader = new FileReader();
+reader.onload = ()=>{
+// assume UTF-8; if Shift_JIS, user should convert
+source.value = reader.result;
+prepareText(source.value);
+};
+reader.readAsText(f, 'UTF-8');
+});
+
+
+startBtn.addEventListener('click', ()=>{
+// prepare if needed
+if(!target || target.length<1) prepareText(source.value);
+startGame();
+});
+
+
+resetBtn.addEventListener('click', ()=>{ resetGame(); source.value=''; });
+
+
+randomBtn.addEventListener('click', ()=>{
+// 簡単なサンプル文章（実際は青空文庫の本文を貼ってください）
+const sample = '吾輩は猫である。名前はまだ無い。\nどこで生れたかとんと見当がつかぬ。\n何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。';
+source.value = sample;
+prepareText(sample);
+});
+
+
+// initial
+resetGame();
+</script>
 </body>
 </html>
