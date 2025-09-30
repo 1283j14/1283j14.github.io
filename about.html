@@ -1,84 +1,97 @@
-<!-- FILE: about.html -->
-const sec = (performance.now() - startTime)/1000;
-timeEl.textContent = sec.toFixed(1);
-const minutes = sec/60;
-const wpm = minutes>0 ? Math.round((correct/5)/minutes) : 0;
-wpmEl.textContent = wpm;
-}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>タイピングゲーム</title>
+    <style>
+        .game-area {
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 20px;
+        }
+        #text-display {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        .correct { color: #4CAF50; }
+        .wrong { color: #f44336; }
+        .current { background: #ffeb3b; }
+    </style>
+</head>
+<body>
+    <div class="game-area">
+        <div class="controls">
+            <select id="book-select">
+                <option value="random">ランダム</option>
+                <option value="neko">吾輩は猫である</option>
+            </select>
+            <button onclick="startGame()">開始</button>
+        </div>
+        <div id="text-display"></div>
+        <div id="stats">
+            <p>正確さ: <span id="accuracy">0</span>%</p>
+            <p>速度: <span id="speed">0</span>文字/分</p>
+        </div>
+    </div>
+    <script>
+        let currentText = '';
+        let currentPos = 0;
+        let startTime = null;
 
+        async function fetchText() {
+            const bookType = document.getElementById('book-select').value;
+            const response = await fetch(`/api/text?type=${bookType}`);
+            const data = await response.json();
+            return data.text;
+        }
 
-function updateStatus(){
-typedEl.textContent = idx;
-correctEl.textContent = correct;
-wrongEl.textContent = wrong;
-const pct = target.length ? Math.round((idx/target.length)*100) : 0;
-meterBar.style.width = pct + '%';
-}
+        async function startGame() {
+            currentText = await fetchText();
+            currentPos = 0;
+            startTime = Date.now();
+            displayText();
+            document.addEventListener('keypress', handleKeyPress);
+        }
 
+        function displayText() {
+            const display = document.getElementById('text-display');
+            display.innerHTML = currentText.split('').map((char, i) => `
+                <span class="${i === currentPos ? 'current' : ''}">${char}</span>
+            `).join('');
+        }
 
-hiddenInput.addEventListener('input', (e)=>{
-if(!target) return;
-const value = e.target.value;
-// compare last character
-const last = value[value.length-1];
-if(typeof last === 'undefined') return;
-const expected = target[idx];
-if(last === expected){
-correct++; idx++; // mark correct
-// mark span
-const span = textView.querySelector(`span[data-i='${idx-1}']`);
-if(span) span.classList.add('correct');
-} else {
-wrong++;
-// flash the current character
-const span = textView.querySelector(`span[data-i='${idx}']`);
-if(span){ span.classList.add('wrong'); setTimeout(()=>span.classList.remove('wrong'),200); }
-}
-// keep only last char in the input so we compare char-by-char
-e.target.value = '';
-updateStatus();
-// complete
-if(idx >= target.length){
-clearInterval(timerId); timerId = null; updateTimer(); alert('完了！');
-}
-});
+        function handleKeyPress(e) {
+            if (currentText[currentPos] === e.key) {
+                document.querySelectorAll('#text-display span')[currentPos].classList.add('correct');
+                currentPos++;
+                if (currentPos >= currentText.length) {
+                    gameComplete();
+                } else {
+                    displayText();
+                }
+            } else {
+                document.querySelectorAll('#text-display span')[currentPos].classList.add('wrong');
+            }
+            updateStats();
+        }
 
+        function updateStats() {
+            const accuracy = (currentPos / currentText.length * 100).toFixed(1);
+            const time = (Date.now() - startTime) / 1000 / 60;
+            const speed = (currentPos / time).toFixed(1);
+            
+            document.getElementById('accuracy').textContent = accuracy;
+            document.getElementById('speed').textContent = speed;
+        }
 
-// file load
-document.getElementById('loadFileBtn').addEventListener('click',()=>fileInput.click());
-fileInput.addEventListener('change', (ev)=>{
-const f = ev.target.files[0];
-if(!f) return;
-const reader = new FileReader();
-reader.onload = ()=>{
-// assume UTF-8; if Shift_JIS, user should convert
-source.value = reader.result;
-prepareText(source.value);
-};
-reader.readAsText(f, 'UTF-8');
-});
-
-
-startBtn.addEventListener('click', ()=>{
-// prepare if needed
-if(!target || target.length<1) prepareText(source.value);
-startGame();
-});
-
-
-resetBtn.addEventListener('click', ()=>{ resetGame(); source.value=''; });
-
-
-randomBtn.addEventListener('click', ()=>{
-// 簡単なサンプル文章（実際は青空文庫の本文を貼ってください）
-const sample = '吾輩は猫である。名前はまだ無い。\nどこで生れたかとんと見当がつかぬ。\n何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。';
-source.value = sample;
-prepareText(sample);
-});
-
-
-// initial
-resetGame();
-</script>
+        function gameComplete() {
+            document.removeEventListener('keypress', handleKeyPress);
+            alert('完了！');
+        }
+    </script>
 </body>
 </html>
