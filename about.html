@@ -20,6 +20,22 @@
         .correct { color: #4CAF50; }
         .wrong { color: #f44336; }
         .current { background: #ffeb3b; }
+        @keyframes typingEffect {
+            from { transform: scale(1.2); background: #ffeb3b; }
+            to { transform: scale(1); background: none; }
+        }
+        .typing-animation {
+            animation: typingEffect 0.3s ease-out;
+        }
+        .settings-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -37,16 +53,49 @@
             <p>速度: <span id="speed">0</span>文字/分</p>
         </div>
     </div>
+    <div class="settings-panel">
+        <button onclick="toggleSettings()">設定</button>
+        <div id="settings" style="display: none;">
+            <div>
+                <label>文字サイズ: </label>
+                <input type="range" min="12" max="24" value="18" oninput="changeFontSize(this.value)">
+            </div>
+            <div>
+                <label>難易度: </label>
+                <select id="difficulty" onchange="changeDifficulty()">
+                    <option value="normal">通常</option>
+                    <option value="hard">難しい</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentText = '';
         let currentPos = 0;
         let startTime = null;
+        let textContent = '';
+
+        function toggleSettings() {
+            const settings = document.getElementById('settings');
+            settings.style.display = settings.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function changeFontSize(size) {
+            document.getElementById('text-display').style.fontSize = size + 'px';
+        }
+
+        function changeDifficulty() {
+            startGame(); // 難易度変更時にゲームを再開
+        }
 
         async function fetchText() {
             const bookType = document.getElementById('book-select').value;
-            const response = await fetch(`/api/text?type=${bookType}`);
+            const difficulty = document.getElementById('difficulty').value;
+            const response = await fetch(`/api/text?type=${bookType}&difficulty=${difficulty}`);
             const data = await response.json();
-            return data.text;
+            textContent = data.text;
+            return textContent;
         }
 
         async function startGame() {
@@ -66,11 +115,18 @@
 
         function handleKeyPress(e) {
             if (currentText[currentPos] === e.key) {
-                document.querySelectorAll('#text-display span')[currentPos].classList.add('correct');
+                const spans = document.querySelectorAll('#text-display span');
+                spans[currentPos].classList.add('correct', 'typing-animation');
                 currentPos++;
                 if (currentPos >= currentText.length) {
                     gameComplete();
                 } else {
+                    // 《》内の読み仮名をスキップ
+                    while (currentPos < currentText.length && 
+                           (currentText[currentPos] === '《' || 
+                            currentText.substring(currentPos-1, currentPos+1) === '》')) {
+                        currentPos++;
+                    }
                     displayText();
                 }
             } else {
@@ -92,6 +148,23 @@
             document.removeEventListener('keypress', handleKeyPress);
             alert('完了！');
         }
+
+        document.addEventListener('keydown', function(e) {
+            if (!startTime) return; // ゲーム開始前は無視
+            const expectedChar = textContent[currentIndex];
+            if (!expectedChar) return; // テキスト終了後は無視
+
+            if (e.key === expectedChar) {
+                const spans = document.querySelectorAll('#text-display span');
+                spans[currentIndex].classList.add('correct', 'typing-animation');
+                currentIndex++;
+                displayText();
+                updateStats();
+            } else {
+                const spans = document.querySelectorAll('#text-display span');
+                spans[currentIndex].classList.add('wrong');
+            }
+        });
     </script>
 </body>
 </html>
