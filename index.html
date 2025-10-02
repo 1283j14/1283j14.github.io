@@ -1,52 +1,573 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>青空文庫タイピングゲーム</title>
-    <style>
-        body { 
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: sans-serif;
-        }
-        .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .button {
-            background: #4CAF50;
-            color: white;
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 5px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            margin: 10px;
-            transition: 0.3s;
-        }
-        .button:hover {
-            background: #45a049;
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ヴァンサバ風 レトロシューティング — ボス & 武器追加</title>
+<style>
+  html,body{height:100%;margin:0;background:#050507;color:#cfe;font-family:monospace}
+  #game{display:block;margin:12px auto;border:8px solid #111;background:#07060a; image-rendering:pixelated}
+  .ui{position:fixed;left:12px;top:12px;z-index:20}
+  .ui div{margin-bottom:6px}
+  button{background:#222;color:#fff;border:1px solid #444;padding:6px 8px;border-radius:6px;margin-right:6px;cursor:pointer}
+  #overlay, #gameover, #levelup{position:fixed;left:0;top:0;width:100%;height:100%;display:none;z-index:30;
+    align-items:center;justify-content:center;background:rgba(0,0,0,0.75);color:#fff;flex-direction:column}
+  .choice{background:#222;padding:12px 18px;margin:8px;border-radius:8px;border:1px solid #444;cursor:pointer}
+  .choice:hover{background:#333}
+  #credits{position:fixed;right:12px;top:12px;color:#9fd;z-index:20;text-align:right}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>青空文庫タイピングゲーム</h1>
-        <button class="button" onclick="location.href='/about'">ゲーム開始</button>
-        <button class="button" onclick="showSettings()">設定</button>
+  <div class="ui">
+    <div>スコア: <span id="score">0</span></div>
+    <div>レベル: <span id="level">1</span> / 残り時間: <span id="time">60</span>s</div>
+    <div>撃破: <span id="kills">0</span></div>
+    <div style="margin-top:6px">
+      <button id="btnRestart">Restart</button>
+      <button id="btnPause">Pause</button>
     </div>
-    <script>
-        function showSettings() {
-            // 設定画面の表示ロジック
-            alert('設定画面は開発中です');
+  </div>
+
+  <div id="credits">自動射撃 / レベルで強化 / 残り10秒でボス</div>
+
+  <canvas id="game" width="640" height="480"></canvas>
+
+  <div id="levelup" style="display:none;flex">
+    <h2>LEVEL UP! 強化を選んでください</h2>
+    <div id="choices" style="display:flex;flex-wrap:wrap;justify-content:center;max-width:760px"></div>
+  </div>
+
+  <div id="gameover" style="display:none;flex">
+    <h2>ゲーム終了</h2>
+    <div>最終スコア: <span id="finalScore">0</span></div>
+    <div style="margin-top:12px">
+      <button id="restartEnd">タイトルへ戻る（Restart）</button>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+
+  // UI elems
+  const scoreEl = document.getElementById('score');
+  const levelEl = document.getElementById('level');
+  const timeEl  = document.getElementById('time');
+  const killsEl = document.getElementById('kills');
+  const levelupEl = document.getElementById('levelup');
+  const choicesEl = document.getElementById('choices');
+  const gameoverEl = document.getElementById('gameover');
+  const finalScoreEl = document.getElementById('finalScore');
+  const btnRestart = document.getElementById('btnRestart');
+  const btnPause = document.getElementById('btnPause');
+  const restartEnd = document.getElementById('restartEnd');
+
+  // Game state
+  let player, bullets, enemies, particles;
+  let upgrades; // e.g. 'spread', 'omni', 'chain'
+  let score, kills, level, timeLeft, gameRunning, bossSpawned;
+  let spawnTimer, shootTimer, boss;
+
+  // Settings
+  const START_TIME = 60; // seconds
+
+  // Initialization (used for restart too)
+  function init() {
+    player = {
+      x: canvas.width/2,
+      y: canvas.height/2,
+      speed: 2.2,
+      size: 10,
+      hp: 3,
+      maxHp: 3,
+      fireRate: 24, // frames between shots (lower is faster)
+      bulletSpeed: 5,
+      bulletPower: 1
+    };
+    bullets = [];
+    enemies = [];
+    particles = [];
+    upgrades = []; // acquired upgrades
+    score = 0;
+    kills = 0;
+    level = 1;
+    timeLeft = START_TIME;
+    spawnTimer = 0;
+    shootTimer = 0;
+    boss = null;
+    bossSpawned = false;
+    gameRunning = true;
+
+    // UI
+    scoreEl.textContent = score;
+    levelEl.textContent = level;
+    timeEl.textContent = timeLeft;
+    killsEl.textContent = kills;
+    levelupEl.style.display = 'none';
+    gameoverEl.style.display = 'none';
+    btnPause.textContent = 'Pause';
+  }
+
+  // Utility
+  function rand(min,max){ return Math.random()*(max-min)+min }
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)) }
+
+  // Enemy spawn
+  function spawnEnemy(isBoss=false){
+    if(isBoss){
+      boss = {
+        x: canvas.width/2,
+        y: -80,
+        vx:0,
+        vy:0.6,
+        size: 48,
+        hp: 200 + level*40,
+        maxHp: 200 + level*40,
+        boss: true,
+        attackTimer: 0
+      };
+      enemies.push(boss);
+      bossSpawned = true;
+      return;
+    }
+    const side = Math.floor(rand(0,4));
+    let x,y;
+    if(side===0){ x = rand(0,canvas.width); y = -20; }
+    if(side===1){ x = canvas.width+20; y = rand(0,canvas.height); }
+    if(side===2){ x = rand(0,canvas.width); y = canvas.height+20; }
+    if(side===3){ x = -20; y = rand(0,canvas.height); }
+    const s = rand(0.6, 1.0) + level*0.08;
+    const hp = 1 + Math.floor(level/3);
+    enemies.push({x,y,vx:0,vy:0,size:10 + Math.random()*6,speed:s,hp:hp,boss:false});
+  }
+
+  // Auto-aim: return nearest enemy or null
+  function autoAim(){
+    if(enemies.length===0) return null;
+    let nearest = null;
+    let nd = Infinity;
+    for(const e of enemies){
+      const dx = e.x - player.x;
+      const dy = e.y - player.y;
+      const d = dx*dx + dy*dy;
+      if(d < nd){
+        nd = d; nearest = e;
+      }
+    }
+    return nearest;
+  }
+
+  // Shooting (auto)
+  function shoot(){
+    if(!gameRunning) return;
+    if(shootTimer > 0) return;
+    const target = autoAim();
+    if(!target) return;
+    // base direction to target
+    const dx0 = target.x - player.x;
+    const dy0 = target.y - player.y;
+    const ang0 = Math.atan2(dy0,dx0);
+    const baseSpeed = player.bulletSpeed;
+
+    // basic bullet
+    function pushBullet(angle, speed = baseSpeed, power = player.bulletPower, kind = 'normal'){
+      const dx = Math.cos(angle), dy = Math.sin(angle);
+      bullets.push({
+        x: player.x + dx*(player.size+6),
+        y: player.y + dy*(player.size+6),
+        dx: dx*speed,
+        dy: dy*speed,
+        life: 120,
+        power: power,
+        kind: kind
+      });
+    }
+
+    // Primary
+    pushBullet(ang0);
+
+    // Spread upgrade: +2 bullets at +- angle
+    if(upgrades.includes('spread')){
+      const s = 0.28; // spread angle
+      pushBullet(ang0 - s);
+      pushBullet(ang0 + s);
+    }
+
+    // Omni upgrade: shot in 8 directions (short cooldown)
+    if(upgrades.includes('omni')){
+      for(let a = 0; a < Math.PI*2; a += Math.PI/4) pushBullet(a, baseSpeed*0.85);
+    }
+
+    // Chain: mark bullets as chain type to trigger chain on hit
+    if(upgrades.includes('chain')){
+      // add a special chain-bullet
+      pushBullet(ang0, baseSpeed, player.bulletPower, 'chain');
+    }
+
+    shootTimer = player.fireRate;
+  }
+
+  // Chain behavior: when a chain bullet hits an enemy, we create a small bolt to nearest other enemy
+  function doChain(fromX, fromY){
+    // find nearest enemy other than the current that is within radius
+    let nearest = null, nd = Infinity;
+    for(const e of enemies){
+      const dx = e.x - fromX, dy = e.y - fromY;
+      const d = dx*dx + dy*dy;
+      if(d < nd){
+        nd = d; nearest = e;
+      }
+    }
+    if(nearest && Math.sqrt(nd) < 200){
+      // spawn a fast tiny bullet directly to that enemy
+      const ang = Math.atan2(nearest.y - fromY, nearest.x - fromX);
+      bullets.push({
+        x: fromX,
+        y: fromY,
+        dx: Math.cos(ang)*8,
+        dy: Math.sin(ang)*8,
+        life: 40,
+        power: 1,
+        kind: 'chainbolt'
+      });
+    }
+  }
+
+  // Update loop
+  function update() {
+    if(!gameRunning) return;
+
+    // spawn enemies periodically
+    if(spawnTimer-- <= 0){
+      // spawn faster with level
+      spawnTimer = Math.max(30 - level*3, 12) + Math.floor(rand(0,24));
+      // small chance for extra
+      spawnEnemy();
+      if(Math.random() < 0.25 + level*0.02) spawnEnemy();
+    }
+
+    // shoot timer decrement
+    shootTimer = Math.max(0, shootTimer-1);
+    // auto shoot
+    shoot();
+
+    // move bullets
+    for(const b of bullets){
+      b.x += b.dx;
+      b.y += b.dy;
+      b.life--;
+    }
+    // remove dead bullets
+    for(let i = bullets.length-1; i>=0; i--){
+      const b = bullets[i];
+      if(b.life <= 0 || b.x < -40 || b.x > canvas.width + 40 || b.y < -40 || b.y > canvas.height + 40) bullets.splice(i,1);
+    }
+
+    // enemies home to player
+    for(const e of enemies){
+      if(e.boss){
+        // simple boss entrance movement then behavior
+        if(e.y < 100) {
+          e.y += e.vy;
+        } else {
+          // boss idle / attack
+          // slight movement
+          e.vx += rand(-0.2,0.2);
+          e.vy += rand(-0.1,0.1);
+          e.vx = clamp(e.vx, -1.2, 1.2);
+          e.vy = clamp(e.vy, -0.6, 0.6);
+          e.x += e.vx;
+          e.y += e.vy;
+          // attack periodically
+          e.attackTimer = (e.attackTimer||0) - 1;
+          if(e.attackTimer <= 0){
+            e.attackTimer = 60; // boss attack cooldown
+            bossShoot(e);
+          }
         }
-    </script>
+      } else {
+        const ang = Math.atan2(player.y - e.y, player.x - e.x);
+        e.vx = Math.cos(ang) * e.speed;
+        e.vy = Math.sin(ang) * e.speed;
+        e.x += e.vx;
+        e.y += e.vy;
+      }
+    }
+
+    // bullet - enemy collisions
+    for(let i = enemies.length-1; i>=0; i--){
+      const e = enemies[i];
+      for(let j = bullets.length-1; j>=0; j--){
+        const b = bullets[j];
+        const dx = e.x - b.x, dy = e.y - b.y;
+        const dist = Math.hypot(dx,dy);
+        if(dist < (e.size + (b.size||3))){
+          // hit
+          e.hp -= b.power || 1;
+          // special: if chain type, trigger chain behavior from hit position
+          if(b.kind === 'chain' || b.kind === 'chainbolt'){
+            // chain from this location
+            doChain(b.x, b.y);
+          }
+          // small particles
+          particles.push({x:b.x,y:b.y,life:20, vx: (rand(-2,2)), vy: (rand(-2,2))});
+          bullets.splice(j,1);
+          if(e.hp <= 0){
+            // enemy destroyed
+            enemies.splice(i,1);
+            score += e.boss ? 500 + level*20 : 10 * level;
+            kills++;
+            // drop small reward: spawn a few particles
+            for(let p=0;p<14;p++) particles.push({x:e.x,y:e.y,life:30, vx: rand(-3,3), vy:rand(-3,3)});
+            // boss defeated gives guaranteed powerful upgrade
+            if(e.boss){
+              // grant a guaranteed 'omni' or 'chain' if not present
+              if(!upgrades.includes('omni')) upgrades.push('omni');
+              else if(!upgrades.includes('chain')) upgrades.push('chain');
+            }
+            // level up check
+            if(kills % 5 === 0) triggerLevelUp();
+            break;
+          }
+        }
+      }
+    }
+
+    // enemy - player collisions
+    for(let i = enemies.length-1; i>=0; i--){
+      const e = enemies[i];
+      const d = Math.hypot(e.x - player.x, e.y - player.y);
+      if(d < e.size + player.size){
+        // damage player
+        player.hp -= 1;
+        enemies.splice(i,1);
+        // spawn hurt particles
+        for(let p=0;p<12;p++) particles.push({x:player.x,y:player.y,life:30, vx: rand(-3,3), vy:rand(-3,3)});
+        if(player.hp <= 0){
+          gameOver();
+        }
+      }
+    }
+
+    // particles update
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.life--;
+      p.vx *= 0.96; p.vy *= 0.96; p.vy += 0.06;
+      if(p.life<=0) particles.splice(i,1);
+    }
+
+    // update UI values
+    scoreEl.textContent = score;
+    levelEl.textContent = level;
+    killsEl.textContent = kills;
+
+    // spawn boss when timeLeft <= 10 and not spawned yet
+    if(timeLeft <= 10 && !bossSpawned){
+      spawnEnemy(true); // spawn boss
+    }
+
+  } // end update
+
+  function bossShoot(bossEntity){
+    // boss shoots many bullets in spread towards player
+    const baseAng = Math.atan2(player.y - bossEntity.y, player.x - bossEntity.x);
+    // large radial burst + targeted streams
+    for(let a = 0; a < Math.PI*2; a += Math.PI/10){
+      bullets.push({
+        x: bossEntity.x + Math.cos(a)*(bossEntity.size+8),
+        y: bossEntity.y + Math.sin(a)*(bossEntity.size+8),
+        dx: Math.cos(a)*3,
+        dy: Math.sin(a)*3,
+        life: 120,
+        power: 1
+      });
+    }
+    // also three aimed shots at player
+    for(let i= -1; i<=1; i++){
+      const ang = baseAng + i*0.12;
+      bullets.push({x:bossEntity.x, y:bossEntity.y, dx:Math.cos(ang)*5, dy:Math.sin(ang)*5, life:120, power:2});
+    }
+  }
+
+  // render
+  function render(){
+    // background
+    ctx.fillStyle = '#07060a';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // stars / grid for retro feel
+    for(let i=0;i<40;i++){
+      ctx.fillStyle = (i%7===0)?'rgba(200,200,255,0.03)':'rgba(200,200,255,0.01)';
+      const x = (i*37)%canvas.width;
+      const y = (i*61)%canvas.height;
+      ctx.fillRect(x, y, 2, 2);
+    }
+
+    // particles
+    for(const p of particles){
+      ctx.fillStyle = `rgba(255,200,100,${Math.max(0, p.life/30)})`;
+      ctx.fillRect(p.x-1, p.y-1, 2, 2);
+    }
+
+    // bullets
+    for(const b of bullets){
+      if(b.kind === 'chainbolt') ctx.fillStyle = '#8ff';
+      else if(b.kind === 'chain') ctx.fillStyle = '#6ff';
+      else ctx.fillStyle = '#fff';
+      ctx.fillRect(b.x-2, b.y-2, 4, 4);
+    }
+
+    // enemies
+    for(const e of enemies){
+      if(e.boss){
+        // boss draw big
+        ctx.fillStyle = '#f55';
+        ctx.beginPath();
+        ctx.ellipse(e.x, e.y, e.size, e.size*0.8, 0, 0, Math.PI*2);
+        ctx.fill();
+        // boss hp bar
+        ctx.fillStyle = '#222';
+        ctx.fillRect(e.x - 80, e.y - e.size - 14, 160, 8);
+        ctx.fillStyle = '#f66';
+        ctx.fillRect(e.x - 80, e.y - e.size - 14, 160 * (e.hp / e.maxHp), 8);
+      } else {
+        ctx.fillStyle = '#f2a';
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.size, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    // player
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    // rotate towards nearest enemy if exists (for visual)
+    const tgt = autoAim();
+    const ang = tgt ? Math.atan2(tgt.y - player.y, tgt.x - player.x) : 0;
+    ctx.rotate(ang);
+    // ship triangle
+    ctx.fillStyle = '#7cf';
+    ctx.beginPath();
+    ctx.moveTo(12,0);
+    ctx.lineTo(-8,7);
+    ctx.lineTo(-8,-7);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // player HP
+    const barW = 140;
+    ctx.fillStyle = '#222';
+    ctx.fillRect(12, canvas.height - 22, barW, 10);
+    ctx.fillStyle = '#2f2';
+    ctx.fillRect(12, canvas.height - 22, barW * (player.hp / player.maxHp), 10);
+    ctx.strokeStyle = '#000';
+    ctx.strokeRect(12, canvas.height - 22, barW, 10);
+
+    // debug small text
+    ctx.fillStyle = '#9fd';
+    ctx.font = '12px monospace';
+    ctx.fillText(`Upgrades: ${upgrades.join(',')||'なし'}`, 12, canvas.height - 32);
+  }
+
+  // Loop
+  let rafId = null;
+  function loop(){
+    update();
+    render();
+    rafId = requestAnimationFrame(loop);
+  }
+
+  // Level up and upgrade choices
+  function triggerLevelUp(){
+    gameRunning = false;
+    level++;
+    levelEl.textContent = level;
+    // show overlay with 3 random choices
+    choicesEl.innerHTML = '';
+    const pool = [
+      {name:'HP +1', apply: ()=>{ player.maxHp++; player.hp = Math.min(player.maxHp, player.hp+1); }},
+      {name:'移動速度 +0.4', apply: ()=>{ player.speed += 0.4; }},
+      {name:'連射強化 (-6 frames)', apply: ()=>{ player.fireRate = Math.max(6, player.fireRate - 6); }},
+      {name:'弾速 +1', apply: ()=>{ player.bulletSpeed += 1; }},
+      {name:'弾威力 +1', apply: ()=>{ player.bulletPower += 1; }},
+      {name:'スプレッド武器', apply: ()=>{ if(!upgrades.includes('spread')) upgrades.push('spread'); }},
+      {name:'全方向武器 (OMNI)', apply: ()=>{ if(!upgrades.includes('omni')) upgrades.push('omni'); }},
+      {name:'チェイン武器', apply: ()=>{ if(!upgrades.includes('chain')) upgrades.push('chain'); }}
+    ];
+    // pick 3 unique
+    const choices = [];
+    while(choices.length < 3){
+      const c = pool[Math.floor(rand(0,pool.length))];
+      if(!choices.includes(c)) choices.push(c);
+    }
+    for(const c of choices){
+      const d = document.createElement('div');
+      d.className = 'choice';
+      d.textContent = c.name;
+      d.onclick = () => {
+        c.apply();
+        levelupEl.style.display = 'none';
+        gameRunning = true;
+      };
+      choicesEl.appendChild(d);
+    }
+    levelupEl.style.display = 'flex';
+  }
+
+  // Timer countdown every second
+  setInterval(()=>{
+    if(gameRunning){
+      timeLeft--;
+      timeEl.textContent = timeLeft;
+      if(timeLeft <= 0){
+        // Time up -> end game if boss still alive? We'll still end.
+        gameOver();
+      }
+    }
+  }, 1000);
+
+  // Game over
+  function gameOver(){
+    gameRunning = false;
+    finalScoreEl.textContent = score;
+    gameoverEl.style.display = 'flex';
+  }
+
+  // Start / Pause / Restart handlers
+  btnRestart.addEventListener('click', () => {
+    // fully reset
+    init();
+    // ensure loop running
+    if(!rafId) loop();
+  });
+  restartEnd.addEventListener('click', () => {
+    init();
+    if(!rafId) loop();
+  });
+
+  btnPause.addEventListener('click', () => {
+    gameRunning = !gameRunning;
+    btnPause.textContent = gameRunning ? 'Pause' : 'Resume';
+  });
+
+  // Ensure restart doesn't leave overlays visible
+  init();
+  loop();
+
+  // small keyboard controls for QA: R = restart, P = pause
+  window.addEventListener('keydown', (e) => {
+    if(e.key.toLowerCase() === 'r') {
+      init();
+    } else if(e.key.toLowerCase() === 'p') {
+      gameRunning = !gameRunning;
+      btnPause.textContent = gameRunning ? 'Pause' : 'Resume';
+    }
+  });
+
+})();
+</script>
 </body>
 </html>
