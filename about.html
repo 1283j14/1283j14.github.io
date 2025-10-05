@@ -3,168 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <title>タイピングゲーム</title>
-    <style>
-        .game-area {
-            margin: 20px auto;
-            max-width: 800px;
-            padding: 20px;
-        }
-        #text-display {
-            font-size: 1.2rem;
-            line-height: 1.6;
-            margin: 20px 0;
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 5px;
-        }
-        .correct { color: #4CAF50; }
-        .wrong { color: #f44336; }
-        .current { background: #ffeb3b; }
-        @keyframes typingEffect {
-            from { transform: scale(1.2); background: #ffeb3b; }
-            to { transform: scale(1); background: none; }
-        }
-        .typing-animation {
-            animation: typingEffect 0.3s ease-out;
-        }
-        .settings-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="game-area">
+    <div class="container game-container">
+        <div id="text-display">
+            <p>下のボタンを押してゲームを開始してください。</p>
+        </div>
+        
         <div class="controls">
             <select id="book-select">
-                <option value="random">ランダム</option>
-                <option value="neko">吾輩は猫である</option>
+                <option value="random">ランダムな作品</option>
+                <option value="wagahai">吾輩は猫である</option>
+                <option value="rashomon">羅生門</option>
+                <option value="kokoro">こころ</option>
             </select>
-            <button onclick="startGame()">開始</button>
+            <button id="start-button" class="button">開始</button>
         </div>
-        <div id="text-display"></div>
-        <div id="stats">
-            <p>正確さ: <span id="accuracy">0</span>%</p>
-            <p>速度: <span id="speed">0</span>文字/分</p>
+
+        <div id="result" class="hidden">
+            <h2>結果</h2>
+            <p>タイム: <span id="time">0.00</span>秒</p>
+            <p>ミスタイプ: <span id="mistakes">0</span>回</p>
+            <p>WPM (Words Per Minute): <span id="wpm">0</span></p>
         </div>
-    </div>
-    <div class="settings-panel">
-        <button onclick="toggleSettings()">設定</button>
-        <div id="settings" style="display: none;">
-            <div>
-                <label>文字サイズ: </label>
-                <input type="range" min="12" max="24" value="18" oninput="changeFontSize(this.value)">
-            </div>
-            <div>
-                <label>難易度: </label>
-                <select id="difficulty" onchange="changeDifficulty()">
-                    <option value="normal">通常</option>
-                    <option value="hard">難しい</option>
-                </select>
-            </div>
-        </div>
+        <a href="/" class="back-link">トップに戻る</a>
     </div>
 
-    <script>
-        let currentText = '';
-        let currentPos = 0;
-        let startTime = null;
-        let textContent = '';
-
-        function toggleSettings() {
-            const settings = document.getElementById('settings');
-            settings.style.display = settings.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function changeFontSize(size) {
-            document.getElementById('text-display').style.fontSize = size + 'px';
-        }
-
-        function changeDifficulty() {
-            startGame(); // 難易度変更時にゲームを再開
-        }
-
-        async function fetchText() {
-            const bookType = document.getElementById('book-select').value;
-            const difficulty = document.getElementById('difficulty').value;
-            const response = await fetch(`/api/text?type=${bookType}&difficulty=${difficulty}`);
-            const data = await response.json();
-            textContent = data.text;
-            return textContent;
-        }
-
-        async function startGame() {
-            currentText = await fetchText();
-            currentPos = 0;
-            startTime = Date.now();
-            displayText();
-            document.addEventListener('keypress', handleKeyPress);
-        }
-
-        function displayText() {
-            const display = document.getElementById('text-display');
-            display.innerHTML = currentText.split('').map((char, i) => `
-                <span class="${i === currentPos ? 'current' : ''}">${char}</span>
-            `).join('');
-        }
-
-        function handleKeyPress(e) {
-            if (currentText[currentPos] === e.key) {
-                const spans = document.querySelectorAll('#text-display span');
-                spans[currentPos].classList.add('correct', 'typing-animation');
-                currentPos++;
-                if (currentPos >= currentText.length) {
-                    gameComplete();
-                } else {
-                    // 《》内の読み仮名をスキップ
-                    while (currentPos < currentText.length && 
-                           (currentText[currentPos] === '《' || 
-                            currentText.substring(currentPos-1, currentPos+1) === '》')) {
-                        currentPos++;
-                    }
-                    displayText();
-                }
-            } else {
-                document.querySelectorAll('#text-display span')[currentPos].classList.add('wrong');
-            }
-            updateStats();
-        }
-
-        function updateStats() {
-            const accuracy = (currentPos / currentText.length * 100).toFixed(1);
-            const time = (Date.now() - startTime) / 1000 / 60;
-            const speed = (currentPos / time).toFixed(1);
-            
-            document.getElementById('accuracy').textContent = accuracy;
-            document.getElementById('speed').textContent = speed;
-        }
-
-        function gameComplete() {
-            document.removeEventListener('keypress', handleKeyPress);
-            alert('完了！');
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (!startTime) return; // ゲーム開始前は無視
-            const expectedChar = textContent[currentIndex];
-            if (!expectedChar) return; // テキスト終了後は無視
-
-            if (e.key === expectedChar) {
-                const spans = document.querySelectorAll('#text-display span');
-                spans[currentIndex].classList.add('correct', 'typing-animation');
-                currentIndex++;
-                displayText();
-                updateStats();
-            } else {
-                const spans = document.querySelectorAll('#text-display span');
-                spans[currentIndex].classList.add('wrong');
-            }
-        });
-    </script>
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
 </body>
 </html>
