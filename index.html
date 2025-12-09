@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>Hyper Rogue TD Neo - v17 Release</title>
+<title>Hyper Rogue TD Neo - v24 Log Position Adjustment</title>
 <style>
   :root{
     --bg:#050914;
@@ -29,17 +29,18 @@
     position:relative;
   }
 
-  /* LEFT SIDE (MAP) */
+  /* LEFT SIDE (MAP & OVERLAYS) */
   #left {
-    flex:1; display:flex; flex-direction:column; gap:8px; position:relative;
-    height: 100%;
+    flex:1; display:flex; flex-direction:column; gap:0; position:relative;
+    height: 100%; border-radius:8px; overflow: hidden;
+    box-shadow:inset 0 0 20px rgba(0,0,0,0.8);
   }
   canvas {
-    background:#070b1a; border-radius:8px; display:block; width:100%; height:100%;
-    cursor:crosshair; box-shadow:inset 0 0 20px rgba(0,0,0,0.8);
+    background:#070b1a; display:block; width:100%; height:100%;
+    cursor:crosshair;
   }
 
-  /* RIGHT SIDE (PANEL) */
+  /* RIGHT SIDE (PANELS) */
   #right {
     width:360px; display:flex; flex-direction:column; gap:8px; z-index:5;
     height: 100%;
@@ -62,7 +63,10 @@
   .btn-danger:hover {background:var(--danger); color:#000; box-shadow:0 0 10px var(--danger);}
 
   /* HUD */
-  #hud {position:absolute;top:10px;left:10px;right:10px;height:40px;display:flex;gap:15px;pointer-events:none; z-index: 100;}
+  #hud {
+    position:absolute; top:10px; left:10px; right:10px; height:40px;
+    display:flex; gap:15px; pointer-events:none; z-index: 100;
+  }
   .stat {background:rgba(15,23,36,0.9);padding:5px 15px;border-radius:4px;border:1px solid rgba(46,230,255,0.3);backdrop-filter:blur(4px);pointer-events:auto; height: 100%; box-sizing: border-box;}
   .label {font-size:0.6rem;color:var(--accent);opacity:0.8;letter-spacing:1px;}
   .val {font-size:1.1rem;font-weight:bold;color:#fff;}
@@ -75,41 +79,31 @@
   /* OVERLAYS */
   #pauseOverlay, #modalOverlay, #newsOverlay {
     position:absolute; top:0; left:0; width:100%; height:100%;
-    background:rgba(0,0,0,0.8); backdrop-filter:blur(5px); z-index:50;
+    background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); z-index:150;
     display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px;
   }
   .pause-title {font-size:3rem; color:var(--accent); letter-spacing:5px; text-shadow:0 0 15px var(--accent);}
 
-  /* NEWS PANEL */
-  .news-panel {
-      background: #0f1724; border: 1px solid var(--accent); border-radius: 8px;
-      padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
-      box-shadow: 0 0 30px rgba(46,230,255,0.2);
-  }
-  .news-header { font-size: 1.5rem; color: var(--accent); margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-  .news-content { font-size: 0.9rem; line-height: 1.6; color: #ddd; }
-  .news-content li { margin-bottom: 8px; }
-
   /* BOSS HUD */
   #bossHud {
-    position:absolute; top:50px; left:50%; transform:translateX(-50%); width:60%; height:40px;
+    position:absolute; top:60px; left:50%; transform:translateX(-50%); width:60%;
     z-index:90; display:flex; flex-direction:column; align-items:center; pointer-events:none;
-    text-shadow:0 0 5px #000;
+    text-shadow:0 0 5px #000; background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--danger);
   }
-  .boss-label {font-size:1.2rem; color:var(--danger); font-weight:bold; letter-spacing:2px; margin-bottom:2px;}
-  .boss-bar-bg {width:100%; height:12px; background:#300; border:1px solid var(--danger); border-radius:6px; overflow:hidden; position:relative;}
-  .boss-bar-fill {height:100%; background:linear-gradient(90deg, #f00, #a00); width:100%; transition:width 0.1s;}
-  .boss-val {font-size:0.8rem; color:#fff; margin-top:2px;}
+  .boss-warning { font-size: 0.9rem; color: var(--danger); font-weight: bold; letter-spacing: 3px; animation: blink 1s infinite; margin-bottom: 5px; }
+  .boss-bar-bg {width:100%; height:12px; background:#300; border:1px solid #500; border-radius:4px; overflow:hidden; position:relative;}
+  .boss-bar-fill {height:100%; background:linear-gradient(90deg, #f00, #a00); width:0%; transition:width 0.1s;}
+  .boss-val {font-size:0.8rem; color:#fff; margin-top:2px; font-weight: bold;}
+  @keyframes blink { 50% { opacity: 0.5; } }
 
-  /* MENU / UPGRADE SCREEN */
+  /* MENU SCREEN */
   #upgradeScreen {padding:20px; overflow-y:auto; align-items:center; background:var(--bg);}
   .header {width:100%; max-width:1000px; display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:20px;}
   .cf-display {font-size:1.5rem; color:var(--legend); font-weight:bold; text-shadow:0 0 10px var(--legend);}
   .tabs {display:flex; gap:10px; margin-bottom:15px;}
   .tab-btn {background:#111; border:1px solid #444; color:#888; padding:8px 20px; cursor:pointer; transition:0.2s;}
   .tab-btn.active {background:var(--accent); color:#000; border-color:var(--accent); font-weight:bold;}
-  
-  .tree-container {display:flex; flex-wrap:wrap; gap:15px; max-width:1000px; justify-content:center; padding-bottom: 20px;}
+  .tree-container {display:flex; flex-wrap:wrap; gap:15px; max-width:1000px; justify-content:center; padding-bottom: 50px;}
   
   .skill-node {
     width:220px; background:#0f1724; border:1px solid #333; padding:10px; border-radius:4px;
@@ -124,7 +118,7 @@
   .skill-owned {position:absolute; top:5px; right:5px; color:var(--accent); font-size:1.2rem;}
 
   /* GAME OVER SCREEN */
-  #gameOverScreen {background:rgba(0,0,0,0.95); justify-content:center; align-items:center; z-index:20;}
+  #gameOverScreen {background:rgba(0,0,0,0.95); justify-content:center; align-items:center; z-index:200;}
   .go-panel {text-align:center; border:2px solid var(--danger); padding:40px; border-radius:10px; background:#110505; max-width:500px;}
   .go-title {font-size:3rem; color:var(--danger); margin-bottom:10px; text-shadow:0 0 20px var(--danger);}
   .go-stat {font-size:1.2rem; margin:10px 0; color:#fff;}
@@ -144,7 +138,7 @@
   .shop-grid {display:grid;grid-template-columns:1fr 1fr;gap:4px;}
   .tech-btn {font-size:0.75rem; display:flex; justify-content:space-between; align-items:center;}
   
-  /* Artifacts Panel - CLEANUP: Removed ::after tooltip */
+  /* Artifacts Panel */
   #artifacts {display:flex; flex-wrap:wrap; gap:6px; align-content: flex-start; overflow-y:auto; max-height:100%;}
   .artifact {
     width:32px; height:32px; background:#111; border:1px solid #444; border-radius:4px;
@@ -161,7 +155,7 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.8); display: none; line-height: 1.4;
   }
 
-  /* SECRET INPUT (Fixed Position) */
+  /* SECRET INPUT */
   #secretCode {
     position: fixed; bottom: 15px; right: 15px; width: 100px;
     background: rgba(0,0,0,0.8); border: 1px solid #444; color: #aaa;
@@ -186,13 +180,41 @@
   .card p {font-size:0.75rem;color:#ccc;line-height:1.4;}
   .card.starter {border-color: #fff; height: 160px; width: 150px;}
 
-  #dpsMeter {position:absolute; bottom:10px; left:10px; width:200px; background:rgba(0,0,0,0.8); border:1px solid #444; border-radius:6px; padding:8px; pointer-events:none; font-size:0.7rem; display:flex; flex-direction:column; gap:4px;}
+  /* NEWS PANEL */
+  .news-panel {
+      background: #0f1724; border: 1px solid var(--accent); border-radius: 8px;
+      padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
+      box-shadow: 0 0 30px rgba(46,230,255,0.2);
+  }
+  .news-header { font-size: 1.5rem; color: var(--accent); margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+  .news-content { font-size: 0.9rem; line-height: 1.6; color: #ddd; }
+  .news-content li { margin-bottom: 8px; }
+
+  /* DPS METER & LOG LAYOUT */
+  #dpsMeter {
+    position:absolute; bottom:10px; left:10px; width:200px;
+    background:rgba(0,0,0,0.8); border:1px solid #444; border-radius:6px;
+    padding:8px; pointer-events:none; font-size:0.7rem;
+    display:flex; flex-direction:column; gap:4px;
+    z-index: 50;
+  }
   .dps-row {display:flex; align-items:center; gap:5px;}
   .dps-bar-bg {flex:1; height:6px; background:#222; border-radius:3px; overflow:hidden;}
   .dps-bar-fill {height:100%; background:var(--accent); transition:width 0.5s;}
-  
-  #log {height:100px;overflow-y:auto;font-size:0.7rem;opacity:0.8;}
-  .log-entry {margin-bottom:2px; border-left:2px solid #333; padding-left:5px;}
+
+  /* [UPDATED] LOG OVERLAY (Center-Right, Next to DPS) */
+  #ingameLog {
+    position:absolute; bottom:10px; 
+    left: 65%; transform: translateX(-50%); /* Moved to right-center */
+    width:450px; height:60px; 
+    background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:6px;
+    padding:5px 10px; pointer-events:none; font-size:0.7rem; font-family: monospace; color:#ccc;
+    display:flex; flex-direction:column; justify-content:flex-end; overflow:hidden;
+    z-index: 50; pointer-events: auto;
+  }
+  #logContent { overflow-y: auto; max-height: 100%; display: flex; flex-direction: column-reverse;}
+  .log-entry { margin-bottom: 1px; border-left: 2px solid #555; padding-left: 5px; background: rgba(0,0,0,0.3); }
+
 </style>
 </head>
 <body>
@@ -203,15 +225,12 @@
 
 <div id="newsOverlay" class="screen hidden">
     <div class="news-panel">
-        <div class="news-header">PATCH NOTES: v17.0</div>
+        <div class="news-header">PATCH NOTES: v24.0</div>
         <div class="news-content">
             <ul>
-                <li><strong>[NEW] Weapon Details:</strong> Hover over weapons in the shop to see stats (DMG, SPD, RNG).</li>
-                <li><strong>[FIX] Artifact Tooltips:</strong> Fixed text glitches and display issues.</li>
-                <li><strong>[FIX] Boss HUD:</strong> HP bar now updates correctly in real-time.</li>
-                <li><strong>[BALANCE] CF Gain:</strong> Now calculated as Round(Wave * 0.25).</li>
-                <li><strong>[BALANCE] Mythic Loot:</strong> Duplicate Mythic Artifacts will no longer appear in the same run.</li>
-                <li><strong>[SYSTEM]</strong> Improved sorting for artifacts (Mythics appear first).</li>
+                <li><strong>[UI] Log Position:</strong> Log window moved slightly to the right for better visibility.</li>
+                <li><strong>[UI] Layout:</strong> HUD and map layout optimized.</li>
+                <li><strong>[SYSTEM]</strong> Previous v23 updates (Blueprints every 5 waves, Mythic Sort, Boss HUD) included.</li>
             </ul>
         </div>
         <button class="btn btn-big" onclick="closeNews()">ACKNOWLEDGE</button>
@@ -222,7 +241,7 @@
   <div class="header">
     <div>
       <h1 style="margin:0; text-shadow:0 0 10px var(--accent);">SYSTEM CORE // UPGRADE</h1>
-      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - VER 17.0</div>
+      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - VER 24.0</div>
     </div>
     <div class="cf-display">CORE FRAGMENTS: <span id="cfVal">0</span></div>
   </div>
@@ -289,9 +308,14 @@
         <button id="nextWaveBtn" class="btn" onclick="triggerWave()">START [ENTER]</button>
       </div>
     </div>
+    
     <div id="dpsMeter">
       <div style="text-align:center; color:#888; margin-bottom:4px;">DPS MONITOR</div>
       <div id="dpsList"></div>
+    </div>
+
+    <div id="ingameLog">
+       <div id="logContent"></div>
     </div>
   </div>
 
@@ -305,21 +329,16 @@
     <div class="panel">
       <h3>TECH UPGRADES</h3>
       <div class="shop-grid">
-        <button class="btn tech-btn" onclick="buyTech('dmg')"><span>DMG++</span><span id="cost_dmg">100</span></button>
-        <button class="btn tech-btn" onclick="buyTech('range')"><span>RNG++</span><span id="cost_range">100</span></button>
-        <button class="btn tech-btn" onclick="buyTech('spd')"><span>SPD++</span><span id="cost_spd">100</span></button>
-        <button class="btn tech-btn" onclick="buyTech('life')"><span>REPAIR</span><span id="cost_life">50</span></button>
+        <button class="btn tech-btn" onmouseenter="showTechTooltip('dmg', this)" onmouseleave="hideTooltip()" onclick="buyTech('dmg')"><span>DMG++</span><span id="cost_dmg">100</span></button>
+        <button class="btn tech-btn" onmouseenter="showTechTooltip('range', this)" onmouseleave="hideTooltip()" onclick="buyTech('range')"><span>RNG++</span><span id="cost_range">100</span></button>
+        <button class="btn tech-btn" onmouseenter="showTechTooltip('spd', this)" onmouseleave="hideTooltip()" onclick="buyTech('spd')"><span>SPD++</span><span id="cost_spd">100</span></button>
+        <button class="btn tech-btn" onmouseenter="showTechTooltip('life', this)" onmouseleave="hideTooltip()" onclick="buyTech('life')"><span>REPAIR</span><span id="cost_life">50</span></button>
       </div>
     </div>
 
     <div class="panel grow">
       <h3>ARTIFACTS</h3>
       <div id="artifacts"></div>
-    </div>
-
-    <div class="panel">
-      <h3>LOG</h3>
-      <div id="log"></div>
     </div>
   </div>
 
@@ -332,14 +351,14 @@
 </div>
 
 <script>
-/* --- DATA: SKILL TREES --- */
+/* --- DATA --- */
 const SKILL_TREES = {
   "nexus_core": {
     "name": "Nexus Core",
     "skills": [
       { id:"core_life_1", name:"Base Integrity +5", desc:"Base Integrity +5", cost:5, effects:{baseLife:5}, prerequisites:[] },
       { id:"core_gold_1", name:"Start Gold +30", desc:"Start Gold +30", cost:5, effects:{startGold:30}, prerequisites:[] },
-      { id:"core_interest_1", name:"Interest Cap +10", desc:"Interest Cap +10 (Uncapped in v10)", cost:5, effects:{interestCap:10}, prerequisites:[] },
+      { id:"core_interest_1", name:"Interest Cap +10", desc:"Interest Cap +10 (Uncapped in v19)", cost:5, effects:{interestCap:10}, prerequisites:[] },
       { id:"core_tech_1", name:"Tech Cost -5%", desc:"Tech Cost -5%", cost:5, effects:{techDiscount:0.05}, prerequisites:[] },
       { id:"core_wave_gold", name:"Wave Gold +1", desc:"+1 Gold per wave", cost:5, effects:{waveStartGold:1}, prerequisites:[] },
       { id:"core_global_dmg", name:"Global DMG +3%", desc:"All Tower DMG +3%", cost:12, effects:{globalDmg:0.03}, prerequisites:["core_life_1"] },
@@ -419,10 +438,10 @@ const ctx = canvas.getContext('2d');
 let saveData = { cf: 0, unlocked: [], seenVersion: null };
 let activeTab = 'nexus_core';
 let animationId = null; 
-const CURRENT_VERSION = "17.0";
+const CURRENT_VERSION = "24.0";
 
 /* --- GAME DEFINITIONS --- */
-const RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']; // Mythic added to array for ease of sort
+const RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']; 
 const RARITY_COLORS = {common:'#b0b0b0', uncommon:'#44ff44', rare:'#2e8cff', epic:'#a335ee', legendary:'#ffaa00', mythic:'#ff0055'};
 
 const BASE_TOWERS = [
@@ -440,7 +459,7 @@ const ARTIFACT_TYPES = [
   {id:'atk', name:'Core', desc:'DMG +[X]%', val:[10, 20, 35, 55, 80], fn:(g,v)=>g.globalMult.dmg+=v/100},
   {id:'spd', name:'Servo', desc:'SPD +[X]%', val:[10, 20, 35, 55, 80], fn:(g,v)=>g.globalMult.spd+=v/100},
   {id:'rng', name:'Lens', desc:'RNG +[X]%', val:[15, 30, 50, 75, 110], fn:(g,v)=>g.globalMult.range+=v/100},
-  {id:'eco', name:'Chip', desc:'Interest +[X]%', val:[2, 4, 6, 9, 12], fn:(g,v)=>g.perks.interest+=v/100}, 
+  {id:'eco', name:'Chip', desc:'Interest +[X]%', val:[0.1, 0.2, 0.3, 0.4, 0.5], fn:(g,v)=>g.perks.interest+=v/100}, 
   {id:'crit', name:'Aim', desc:'Crit +[X]%', val:[5, 10, 15, 25, 40], fn:(g,v)=>g.perks.crit+=v/100},
   {id:'boom', name:'Powder', desc:'Explode [X]% DMG', val:[15, 30, 50, 80, 120], fn:(g,v)=>g.perks.explodeDmg+=v/100},
   {id:'coil', name:'Overload', desc:'Crit DMG +[X]%', val:[50, 80, 120, 170, 230], fn:(g,v)=>g.perks.critMult += v/100},
@@ -460,7 +479,7 @@ const MYTHICS = [
 
 /* --- SAVE SYSTEM --- */
 function loadSave() {
-  const s = localStorage.getItem('hyperRogueV17');
+  const s = localStorage.getItem('hyperRogueV24');
   if(s) {
     try {
       const d = JSON.parse(s);
@@ -473,7 +492,7 @@ function loadSave() {
   checkNews();
 }
 function saveGame() {
-  localStorage.setItem('hyperRogueV17', JSON.stringify(saveData));
+  localStorage.setItem('hyperRogueV24', JSON.stringify(saveData));
   updateUpgradeUI();
 }
 
@@ -601,6 +620,10 @@ function renderCurrentStats(containerId) {
     const el = document.getElementById(containerId);
     if(!el) return;
     const p = (v) => (v > 0 ? "+" : "") + Math.round(v*100) + "%";
+    
+    // Calculate Interest Rate
+    let interestRate = 0.03 + game.perks.interest;
+
     const s = [
         {l:"Global DMG", v:p(game.globalMult.dmg)},
         {l:"Global RNG", v:p(game.globalMult.range)},
@@ -608,6 +631,7 @@ function renderCurrentStats(containerId) {
         {l:"Crit Chance", v:Math.round(game.perks.crit*100) + "%"},
         {l:"Crit Mult", v:"x" + game.perks.critMult.toFixed(1)},
         {l:"Explode DMG", v:p(game.perks.explodeDmg)},
+        {l:"Interest Rate", v:(interestRate*100).toFixed(1) + "%"}, 
         {l:"Start Gold", v:"+"+game.perks.waveStartGold},
         {l:"Gold/Hit", v:"+"+game.perks.goldPerHit},
         {l:"Mythic Chance", v:(game.perks.mythicChance*100).toFixed(2)+"%"},
@@ -635,7 +659,6 @@ function moveTooltip(e) {
     if(tooltipEl.style.display === 'block') {
         const x = e.clientX + 10;
         const y = e.clientY + 10;
-        // Keep inside window
         const rect = tooltipEl.getBoundingClientRect();
         let left = x; let top = y;
         if(left + rect.width > window.innerWidth) left = x - rect.width - 20;
@@ -643,6 +666,19 @@ function moveTooltip(e) {
         tooltipEl.style.left = left + 'px';
         tooltipEl.style.top = top + 'px';
     }
+}
+function showTechTooltip(type, el) {
+    if(!game) return;
+    let txt = "";
+    if(type==='dmg') txt = `DMG Multiplier: x${(1+game.globalMult.dmg).toFixed(2)}`;
+    else if(type==='range') txt = `Range Multiplier: x${(1+game.globalMult.range).toFixed(2)}`;
+    else if(type==='spd') txt = `Speed Multiplier: x${(1+game.globalMult.spd).toFixed(2)}`;
+    else if(type==='life') txt = `Restore Integrity (+5)\nMax: ${game.maxLife}`;
+    
+    // Add cost
+    txt += `\nNext Cost: ${game.techCost[type]} CR`;
+    
+    showTooltip({clientX: el.getBoundingClientRect().right, clientY: el.getBoundingClientRect().top}, txt);
 }
 window.addEventListener('mousemove', moveTooltip);
 
@@ -805,7 +841,7 @@ class Enemy {
 
     this.shield = 0; this.armor = 0; this.regen = 0; this.debuffs = { slow:0, vuln:0, mark:0 };
     if (this.type === 'boss') { this.maxHp *= 6; this.speed *= 0.6; }
-    if (this.type === 'shield') { this.shield = 3; }
+    if (this.type === 'shield') { this.shield = 20; } 
     if (this.type === 'tank') { this.maxHp *= 6; this.speed *= 0.5; }
     if (this.type === 'elite') { this.maxHp *= 1.5; if(Math.random()<0.5) this.speed *= 1.3; else this.armor = 3; }
     if (this.type === 'phase') { this.speed *= 0.9; this.phaseCool = 0.5; }
@@ -1085,11 +1121,6 @@ function grantBossReward() {
     if(Math.random() < 0.3) rarityIdx = 3; 
     if(Math.random() < 0.05) rarityIdx = 4;
     
-    // FIX: Filter out existing mythics logic not needed here as this is standard drop, 
-    // but we can apply uniqueness here too if we want boss drops to be unique mythics.
-    // For simplicity, Boss drops standard pool (can include Mythics by chance but rare).
-    // Let's stick to the standard types for boss drops unless we roll Mythic specifically.
-    
     const type = ARTIFACT_TYPES[Math.floor(Math.random() * ARTIFACT_TYPES.length)];
     const u = { typeId: type.id, rarityIdx: rarityIdx, name: type.name, baseDesc: type.desc, fn: type.fn, val: type.val };
     log(`BOSS DEFEATED! DROP: ${type.name}`);
@@ -1105,9 +1136,28 @@ function waveComplete(failed) {
       document.getElementById('nextWaveBtn').disabled = false;
       updateHUD(); return;
   }
-  let bonus = Math.floor(game.gold * 0.1); 
-  if(game.perks.interest) bonus += Math.floor(game.gold * game.perks.interest);
-  if(bonus > 0) { game.gold += bonus; log(`INTEREST: +${bonus} CR`); }
+  
+  // ADDED: BLUEPRINT DROP CHANCE ON WAVE CLEAR
+  const lockedTowers = TOWERS.filter(t => !t.unlocked && t.id !== 'laser');
+  let bpChance = 0.3 + (game.perks.blueprintChance || 0);
+  let gotBlueprint = false;
+  
+  if(lockedTowers.length > 0 && Math.random() < bpChance) {
+     // Pass this info to showDraftScreen via a flag, or handle it inside showDraftScreen logic
+     // Current logic is inside showDraftScreen, so we just proceed.
+  }
+
+  // CHANGED: Interest logic (Base 3% + Artifacts, Capped at 5% of Gold)
+  let interestRate = 0.03 + game.perks.interest;
+  let bonus = Math.floor(game.gold * interestRate);
+  let cap = Math.floor(game.gold * 0.05);
+  
+  let finalInterest = Math.min(bonus, cap);
+  
+  if(finalInterest > 0) { 
+      game.gold += finalInterest; 
+      log(`INTEREST: +${finalInterest} CR (Rate:${(interestRate*100).toFixed(1)}% Cap:5%)`); 
+  }
 
   if(game.perks.cfGain > 0) { saveData.cf += game.perks.cfGain; log(`CF ACQUIRED: +${game.perks.cfGain}`); }
   game.state = 'drafting'; showDraftScreen();
@@ -1214,7 +1264,10 @@ function draw() {
   game.towers.forEach(t => {
     ctx.fillStyle = t.def.color;
     if(t.def.type === 'support') {
-         ctx.strokeStyle = t.def.color; ctx.lineWidth = 2; ctx.strokeRect((t.x+0.5)*TILE - TILE*0.35, (t.y+0.5)*TILE - TILE*0.35, TILE*0.7, TILE*0.7);
+         ctx.strokeStyle = t.def.color; ctx.lineWidth = 2; 
+         ctx.strokeRect((t.x+0.5)*TILE - TILE*0.35, (t.y+0.5)*TILE - TILE*0.35, TILE*0.7, TILE*0.7);
+         ctx.font = "bold 10px sans-serif"; ctx.textAlign="center"; ctx.fillStyle=t.def.color;
+         ctx.fillText("BUFF", (t.x+0.5)*TILE, (t.y+0.55)*TILE);
     } else {
          ctx.fillRect((t.x+0.5)*TILE - TILE*0.35, (t.y+0.5)*TILE - TILE*0.35, TILE*0.7, TILE*0.7);
          ctx.save(); ctx.translate((t.x+0.5)*TILE, (t.y+0.5)*TILE); ctx.rotate(t.angle); ctx.fillStyle = '#eee'; ctx.fillRect(0, -2, TILE*0.5, 4); ctx.restore();
@@ -1270,7 +1323,7 @@ function draw() {
 
 /* --- UI HELPERS --- */
 function spawnParticles(x, y, c, n) { for(let i=0; i<n; i++) game.particles.push(new Particle(x,y,c)); }
-function log(m) { const l = document.getElementById('log'); const d = document.createElement('div'); d.className = 'log-entry'; d.innerText = `> ${m}`; l.prepend(d); }
+function log(m) { const l = document.getElementById('logContent'); const d = document.createElement('div'); d.className = 'log-entry'; d.innerText = `> ${m}`; l.prepend(d); }
 function updateHUD() {
   document.getElementById('gold').innerText = Math.floor(game.gold);
   document.getElementById('life').innerText = game.life + " / " + game.maxLife;
@@ -1278,13 +1331,20 @@ function updateHUD() {
   
   // BOSS HUD UPDATE FIX
   // Check for any boss
-  const boss = game.enemies.find(e => e.type === 'boss' && e.alive);
+  const bosses = game.enemies.filter(e => e.type === 'boss' && e.alive);
   const hud = document.getElementById('bossHud');
-  if(boss) {
+  if(bosses.length > 0) {
+      // Sort by progress descending (closest to goal first)
+      bosses.sort((a,b) => b.progress - a.progress);
+      const boss = bosses[0];
       hud.classList.remove('hidden');
       const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
-      document.getElementById('bossBarFill').style.width = pct + "%";
-      document.getElementById('bossHpVal').innerText = Math.floor(boss.hp) + " / " + Math.floor(boss.maxHp);
+      const fill = document.getElementById('bossBarFill');
+      const val = document.getElementById('bossHpVal');
+      
+      // Force update styles
+      fill.style.width = pct + "%";
+      val.innerText = Math.ceil(boss.hp) + " / " + Math.ceil(boss.maxHp);
   } else {
       hud.classList.add('hidden');
   }
@@ -1310,7 +1370,22 @@ function showDraftScreen() {
   container.innerHTML = ''; modal.classList.remove('hidden');
   let choicesCount = 3 + (game.perks.draftChoices || 0);
   let pool = [...ARTIFACT_TYPES];
+  
+  // RESTORED: Guaranteed Blueprint every 5 waves if possible
+  const lockedTowers = TOWERS.filter(t => !t.unlocked && t.id !== 'laser');
+  const isUnlockWave = (game.wave % 5 === 0);
+  let bpAdded = false;
+
   for(let i=0; i<choicesCount; i++) {
+    // Priority: Blueprint
+    if(isUnlockWave && !bpAdded && lockedTowers.length > 0) {
+        const t = lockedTowers[Math.floor(Math.random() * lockedTowers.length)];
+        const u = { typeId: `bp_${t.id}`, rarityIdx: 4, name: `BP: ${t.name}`, baseDesc: `Unlock ${t.name}`, rarity:'legendary', isBlueprint:true, target:t };
+        createCard(container, u, 4);
+        bpAdded = true;
+        continue;
+    }
+
     let rarityIdx = 0; const r = Math.random();
     if(r < game.perks.mythicChance) rarityIdx = 5; 
     else if(r < 0.05 + (game.perks.rarityRare||0)) rarityIdx = 2; 
@@ -1318,7 +1393,6 @@ function showDraftScreen() {
     
     // Mythic Unique Check
     if(rarityIdx === 5) { 
-        // Filter out obtained mythics
         const availableMythics = MYTHICS.filter(m => !game.mythicHistory.includes(m.id));
         if(availableMythics.length > 0) {
             const m = availableMythics[Math.floor(Math.random() * availableMythics.length)];
@@ -1340,10 +1414,15 @@ function showDraftScreen() {
 }
 function createCard(container, u, rarityIdx) {
     const el = document.createElement('div'); const rName = rarityIdx === 5 ? 'mythic' : RARITIES[rarityIdx]; el.className = `card ${rName}`;
-    let html = `<h4>${u.name}</h4>`; if(rarityIdx===5) html += `<p>${u.desc}</p>`; else { const val = u.val[rarityIdx]; html += `<p>${u.baseDesc.replace('[X]', val)}</p><p style="font-size:0.65rem; color:#666; margin-top:5px;">Collect 3 to Upgrade</p>`; }
+    let html = `<h4>${u.name}</h4>`; if(rarityIdx===5 || u.isBlueprint) html += `<p>${u.baseDesc || u.desc}</p>`; else { const val = u.val[rarityIdx]; html += `<p>${u.baseDesc.replace('[X]', val)}</p><p style="font-size:0.65rem; color:#666; margin-top:5px;">Collect 3 to Upgrade</p>`; }
     el.innerHTML = html;
     el.onclick = () => {
-        if(rarityIdx===5) { 
+        if(u.isBlueprint) {
+            u.target.unlocked = true;
+            log(`BLUEPRINT: ${u.target.name} UNLOCKED`);
+            renderShop();
+        }
+        else if(rarityIdx===5) { 
             u.fn(game); 
             game.artifacts.push({...u, rarity:'mythic'}); 
             game.mythicHistory.push(u.typeId); // Track ID
@@ -1366,16 +1445,10 @@ function applyArtifactStats(u) { u.fn(game, u.val[u.rarityIdx]); }
 function createArtifactData(u) { return {typeId:u.typeId, rarityIdx:u.rarityIdx, rarity:RARITIES[u.rarityIdx], name:u.name, desc:u.baseDesc.replace('[X]', u.val[u.rarityIdx])}; }
 function renderArtifacts() {
   const d = document.getElementById('artifacts'); d.innerHTML = ''; 
-  
-  // Sort Logic: Mythic(5) > Legendary(4) ...
-  game.artifacts.sort((a,b)=>{
-      // Prioritize Mythic (rarityIdx 5)
-      // Descending sort
-      return b.rarityIdx - a.rarityIdx; 
-  });
+  // SORT: Mythic First
+  game.artifacts.sort((a,b) => b.rarityIdx - a.rarityIdx);
 
   const grouped = {}; game.artifacts.forEach(a=>{ const k=a.typeId+'_'+a.rarityIdx; if(!grouped[k]) grouped[k]={...a, count:0}; grouped[k].count++; });
-  
   Object.values(grouped).forEach(a=>{
       const el = document.createElement('div'); el.className=`artifact ${a.rarity}`; el.innerText=a.name[0]; 
       // Tooltip handling in JS now
