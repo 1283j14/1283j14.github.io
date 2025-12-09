@@ -1,15 +1,1022 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>青空文庫タイピングゲーム</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<meta charset="utf-8" />
+<title>Hyper Rogue TD Neo - Enhanced v2</title>
+<style>
+  :root{
+    --bg:#050914;
+    --panel:#0f1724; --accent:#2ee6ff;
+    --common:#b0b0b0; --uncommon:#44ff44;
+    --rare:#2e8cff; --epic:#a335ee; --legend:#ffaa00;
+    --mythic:#ff0055; --danger:#ff4d4d;
+  }
+  html,body{height:100%;margin:0;font-family:'Courier New', sans-serif;background:var(--bg);color:#eaf6ff;overflow:hidden;user-select:none;}
+  #game {display:flex;height:100vh;gap:12px;padding:12px;box-sizing:border-box;position:relative;}
+  #left {flex:1;display:flex;flex-direction:column;gap:8px;position:relative;}
+  canvas {background:#070b1a;border-radius:8px;display:block;width:100%;height:100%;cursor:crosshair;box-shadow:inset 0 0 20px rgba(0,0,0,0.8);}
+  
+  /* HUD */
+  #hud {position:absolute;top:10px;left:10px;right:10px;height:60px;display:flex;gap:15px;pointer-events:none;}
+  .stat {background:rgba(15,23,36,0.9);padding:5px 15px;border-radius:4px;border:1px solid rgba(46,230,255,0.3);backdrop-filter:blur(4px);pointer-events:auto;}
+  .label {font-size:0.7rem;color:var(--accent);opacity:0.8;letter-spacing:1px;}
+  .val {font-size:1.4rem;font-weight:bold;color:#fff;}
+  .controls {pointer-events:auto; display:flex; gap:10px; align-items:center;}
+  
+  /* Right Panel */
+  #right {width:360px;display:flex;flex-direction:column;gap:8px;z-index:5;}
+  .panel{background:rgba(15,23,36,0.95);padding:10px;border-radius:6px;border:1px solid #23344a;display:flex;flex-direction:column;gap:5px;}
+  h3{margin:0 0 5px 0;font-size:0.85rem;color:var(--accent);border-bottom:1px solid #23344a;padding-bottom:5px;display:flex;justify-content:space-between;}
+  
+  /* Buttons */
+  .btn {background:linear-gradient(180deg, #1a273a, #0f1724);border:1px solid var(--accent);color:var(--accent);padding:8px;cursor:pointer;border-radius:4px;transition:0.2s;font-weight:bold;font-family:inherit;}
+  .btn:hover {background:var(--accent);color:#000;box-shadow:0 0 10px var(--accent);}
+  .btn:disabled {border-color:#555;color:#555;pointer-events:none;background:#111;}
+  
+  /* Shop & Tech */
+  .shop-grid {display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+  .tech-btn {font-size:0.75rem; display:flex; justify-content:space-between; align-items:center;}
+  
+  /* Artifacts */
+  #artifacts {display:flex;flex-wrap:wrap;gap:6px; align-content: flex-start; min-height: 100px;}
+  .artifact {
+    width:32px;height:32px;background:#111;border:1px solid #444;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;font-size:10px;cursor:help;
+    position:relative;transition:0.3s; font-weight: bold;
+  }
+  .artifact:hover::after {content:attr(data-desc);position:absolute;bottom:100%;right:0;background:#000;border:1px solid #fff;padding:5px;width:200px;font-size:10px;z-index:100;white-space:pre-wrap;}
+  
+  .artifact-count {
+    position: absolute; bottom: -5px; right: -5px;
+    background: #000; color: #fff; font-size: 8px;
+    padding: 1px 3px; border-radius: 4px; border: 1px solid #555;
+    pointer-events: none;
+  }
+
+  /* Rarities */
+  .common { border-color: var(--common); color: var(--common); }
+  .uncommon { border-color: var(--uncommon); color: var(--uncommon); box-shadow: 0 0 2px var(--uncommon); }
+  .rare { border-color: var(--rare); color: var(--rare); box-shadow: 0 0 4px var(--rare); }
+  .epic { border-color: var(--epic); color: var(--epic); box-shadow: 0 0 6px var(--epic); }
+  .legendary { border-color: var(--legend); color: var(--legend); box-shadow: 0 0 8px var(--legend); animation: pulseLeg 2s infinite; }
+  .mythic { border-color: var(--mythic); color: var(--mythic); box-shadow: 0 0 10px var(--mythic); animation: pulseMy 1.5s infinite; }
+
+  @keyframes pulseLeg {0%{box-shadow:0 0 5px var(--legend);} 50%{box-shadow:0 0 15px var(--legend);} 100%{box-shadow:0 0 5px var(--legend);}}
+  @keyframes pulseMy {0%{box-shadow:0 0 5px var(--mythic);} 50%{box-shadow:0 0 20px var(--mythic);} 100%{box-shadow:0 0 5px var(--mythic);}}
+
+  /* Modal */
+  #modalOverlay {position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);backdrop-filter:blur(5px);z-index:100;display:flex;justify-content:center;align-items:center;flex-direction:column;}
+  .hidden {display:none !important;}
+  .card-container {display:flex;gap:15px;margin-top:20px;flex-wrap:wrap;justify-content:center;max-width: 90%; max-height: 80vh; overflow-y: auto;}
+  .card {width:180px;background:#141e30;border:1px solid #444;padding:15px;border-radius:8px;cursor:pointer;transition:0.3s;position:relative;overflow:hidden; display:flex; flex-direction:column; justify-content:space-between;}
+  .card:hover {transform:translateY(-10px);box-shadow:0 0 20px rgba(46,230,255,0.4);border-color:var(--accent);}
+  .card h4 {margin:0 0 8px 0;color:var(--accent);font-size:0.9rem;}
+  .card p {font-size:0.75rem;color:#ccc;line-height:1.4;}
+  .card.mythic {border:2px solid var(--mythic); box-shadow:0 0 20px var(--mythic);} .card.mythic h4 {color:var(--mythic); text-shadow:0 0 5px var(--mythic);}
+  .card.starter {border-color: #fff; height: 160px; width: 150px;} .card.starter:hover {border-color: var(--accent);}
+
+  /* Checkbox */
+  .switch-container {display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:15px;}
+  input[type=checkbox] {accent-color: var(--accent);}
+  
+  #log {height:100px;overflow-y:auto;font-size:0.7rem;opacity:0.8;}
+  .log-entry {margin-bottom:2px; border-left:2px solid #333; padding-left:5px;}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>青空文庫タイピング</h1>
-        <p>文豪たちの作品で、タイピングスキルを磨こう。</p>
-        <a href="/game" class="button">ゲーム開始</a>
+
+<div id="game">
+  <div id="left">
+    <canvas id="c"></canvas>
+    <div id="hud">
+      <div class="stat"><div class="label">CREDITS</div><div class="val" id="gold">0</div></div>
+      <div class="stat"><div class="label">INTEGRITY</div><div class="val" id="life">20</div></div>
+      <div class="stat"><div class="label">WAVE</div><div class="val" id="wave">0</div></div>
+      <div style="flex:1"></div>
+      <div class="controls">
+        <div class="switch-container">
+          <input type="checkbox" id="autoStartCheck">
+          <label for="autoStartCheck" style="font-size:0.7rem;cursor:pointer;">AUTO START</label>
+        </div>
+        <button id="nextWaveBtn" class="btn" onclick="triggerWave()">START [ENTER]</button>
+      </div>
     </div>
+  </div>
+
+  <div id="right">
+    <div class="panel">
+      <h3>WEAPON SHOP (Click to Buy / Merge)</h3>
+      <div id="shopList" class="shop-grid"></div>
+      <div style="font-size:0.65rem;text-align:center;color:#666;margin-top:3px;">Cost increases per purchase</div>
+    </div>
+    
+    <div class="panel">
+      <h3>TECH UPGRADES (Global)</h3>
+      <div class="shop-grid">
+        <button class="btn tech-btn" onclick="buyTech('dmg')"><span>DMG++</span><span id="cost_dmg">100</span></button>
+        <button class="btn tech-btn" onclick="buyTech('range')"><span>RNG++</span><span id="cost_range">100</span></button>
+        <button class="btn tech-btn" onclick="buyTech('spd')"><span>SPD++</span><span id="cost_spd">100</span></button>
+        <button class="btn tech-btn" onclick="buyTech('life')"><span>REPAIR</span><span id="cost_life">50</span></button>
+      </div>
+    </div>
+
+    <div class="panel" style="flex:1;">
+      <h3>ARTIFACTS (3 Same = Rank Up)</h3>
+      <div id="artifacts"></div>
+    </div>
+
+    <div class="panel">
+      <h3>LOG</h3>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <div id="modalOverlay" class="hidden">
+    <h2 id="modalTitle" style="color:white;text-shadow:0 0 10px var(--accent);"></h2>
+    <div id="modalSubtitle" style="color:#aaa;"></div>
+    <div class="card-container" id="cards"></div>
+  </div>
+</div>
+
+<script>
+/* --- CONFIG & DATA --- */
+const GRID_W = 16, GRID_H = 10;
+let TILE, game, mousePos, selectDef, selectedTower = null;
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+// Rarity Definitions
+const RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+const RARITY_COLORS = {common:'#b0b0b0', uncommon:'#44ff44', rare:'#2e8cff', epic:'#a335ee', legendary:'#ffaa00'};
+
+// Tower Definitions (Update: Added pierce and special props)
+const TOWERS = [
+  {id:'laser', name:'LASER', cost:30, dmg:4, fire:0.2, range:4.0, color:'#2ee6ff', type:'pierce', pierce:3, unlocked:true},
+  {id:'beam', name:'H.BEAM', cost:70, dmg:20, fire:1.2, range:5.5, color:'#7b6bff', type:'single', unlocked:false},
+  {id:'blaster', name:'BLASTER', cost:100, dmg:10, fire:0.8, range:3.0, color:'#ff4d4d', type:'aoe_prox', unlocked:false},
+  {id:'sniper', name:'SNIPER', cost:150, dmg:50, fire:2.0, range:9.0, color:'#00ff88', type:'single', unlocked:false},
+  // New Weapons
+  {id:'rocket', name:'ROCKET', cost:250, dmg:60, fire:1.8, range:4.5, color:'#ffaa00', type:'aoe', unlocked:false},
+  {id:'railgun', name:'RAILGUN', cost:400, dmg:150, fire:3.5, range:14.0, color:'#ff00ff', type:'pierce', pierce:10, unlocked:false}
+];
+
+// Base Artifact Types
+const ARTIFACT_TYPES = [
+  {id:'atk', name:'Core', desc:'DMG +[X]%', val:[10, 20, 35, 55, 80], fn:(g,v)=>g.globalMult.dmg+=v/100},
+  {id:'spd', name:'Servo', desc:'SPD +[X]%', val:[10, 20, 35, 55, 80], fn:(g,v)=>g.globalMult.spd+=v/100},
+  {id:'rng', name:'Lens', desc:'RNG +[X]%', val:[15, 30, 50, 75, 110], fn:(g,v)=>g.globalMult.range+=v/100},
+  {id:'eco', name:'Chip', desc:'Interest +[X]%', val:[5, 10, 15, 25, 40], fn:(g,v)=>g.perks.interest+=v/100},
+  {id:'crit', name:'Aim', desc:'Crit +[X]%', val:[5, 10, 15, 25, 40], fn:(g,v)=>g.perks.crit+=v/100},
+  {id:'boom', name:'Powder', desc:'Explode [X]% DMG', val:[15, 30, 50, 80, 120], fn:(g,v)=>g.perks.explodeDmg+=v/100}
+];
+
+// Blueprints
+const BLUEPRINTS = [
+  {id:'unlock_beam', name:'BP: BEAM', rarity:'blueprint', desc:'Unlocks H.BEAM', type:'unlock', target:'beam'},
+  {id:'unlock_blaster', name:'BP: BLASTER', rarity:'blueprint', desc:'Unlocks BLASTER', type:'unlock', target:'blaster'},
+  {id:'unlock_sniper', name:'BP: SNIPER', rarity:'blueprint', desc:'Unlocks SNIPER', type:'unlock', target:'sniper'},
+  {id:'unlock_rocket', name:'BP: ROCKET', rarity:'blueprint', desc:'Unlocks ROCKET\n(High AOE)', type:'unlock', target:'rocket'},
+  {id:'unlock_railgun', name:'BP: RAILGUN', rarity:'blueprint', desc:'Unlocks RAILGUN\n(Extreme Range)', type:'unlock', target:'railgun'},
+];
+
+// Mythic Pool
+const MYTHICS = [
+  {id:'god', name:'DEUS EX', rarity:'mythic', desc:'MYTHIC: All Towers Tier +1 Stats', fn: g=>g.globalMult.tierBonus+=1},
+  {id:'midas', name:'MIDAS TOUCH', rarity:'mythic', desc:'MYTHIC: +1 Gold per Hit', fn: g=>g.perks.goldPerHit+=1},
+  {id:'void', name:'EVENT HORIZON', rarity:'mythic', desc:'MYTHIC: Enemies start with 50% HP', fn: g=>g.perks.startHpMult=0.5},
+  {id:'time', name:'CHRONO SHIFT', rarity:'mythic', desc:'MYTHIC: Enemies 30% Slower', fn: g=>g.perks.slowMult=0.7}
+];
+
+// Starter Bonuses (Expanded to 10)
+const STARTERS = [
+  {name:'HYPER BEAM', desc:'Beam Tower DMG x3', fn: g=>{ const t=TOWERS.find(x=>x.id==='beam'); t.dmg*=3; t.color='#fff'; t.unlocked=true; }},
+  {name:'TREASURE HUNTER', desc:'Mythic Chance x5 (1.5%)', fn: g=>g.perks.mythicChance=0.015},
+  {name:'FORTRESS', desc:'Start with 50 Integrity', fn: g=>g.life=50},
+  {name:'TYCOON', desc:'Start with 400 Credits', fn: g=>g.gold=400},
+  {name:'VETERAN', desc:'Start with Lv.3 Laser', fn: g=>{ 
+      const t = new Tower(5, 5, TOWERS[0], 3); 
+      // Place in a valid spot later or just add to inventory equivalent
+      // For simplicity, we just grant gold equivalent to buy and merge up to tier 3 roughly
+      g.gold += 150; 
+      g.globalMult.dmg += 0.2;
+  }},
+  {name:'SNIPER ELITE', desc:'Unlock Sniper & Range +20%', fn: g=>{ 
+      TOWERS.find(x=>x.id==='sniper').unlocked=true; g.globalMult.range+=0.2; 
+  }},
+  {name:'GAMBLER', desc:'Start Gold: 100-800', fn: g=>{ g.gold = 100 + Math.floor(Math.random()*701); }},
+  {name:'OVERCLOCK', desc:'SPD +30%, Range -10%', fn: g=>{ g.globalMult.spd+=0.3; g.globalMult.range-=0.1; }},
+  {name:'MINIMALIST', desc:'DMG +50%, Integrity = 1', fn: g=>{ g.globalMult.dmg+=0.5; g.life=1; }},
+  {name:'ENGINEER', desc:'All Tech Costs -30%', fn: g=>{ 
+      Object.keys(g.techCost).forEach(k => g.techCost[k] = Math.floor(g.techCost[k]*0.7));
+  }}
+];
+
+/* --- CLASSES --- */
+class Particle {
+  constructor(x, y, color, speed=0.2) {
+    this.x = x; this.y = y; this.color = color;
+    this.vx = (Math.random()-0.5)*speed; this.vy = (Math.random()-0.5)*speed;
+    this.life = 1.0;
+  }
+  update() { this.x+=this.vx; this.y+=this.vy; this.life-=0.04; }
+  draw(ctx, t) {
+    ctx.globalAlpha = this.life; ctx.fillStyle = this.color;
+    ctx.fillRect(this.x*t, this.y*t, t*0.15, t*0.15);
+    ctx.globalAlpha = 1;
+  }
+}
+
+class DamageText {
+  constructor(x, y, text, color='#fff', isCrit=false) {
+    this.x = x; this.y = y; this.text = text; this.color = color;
+    this.isCrit = isCrit;
+    this.life = 1.0; this.vy = -0.01;
+  }
+  update() { this.y += this.vy; this.life -= 0.02; }
+  draw(ctx, t) {
+    ctx.globalAlpha = Math.max(0, this.life);
+    ctx.fillStyle = this.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+    const scale = this.isCrit ? 0.6 : 0.35;
+    ctx.font = "bold " + (t*scale) + "px sans-serif";
+    ctx.strokeText(this.text, this.x*t, this.y*t);
+    ctx.fillText(this.text, this.x*t, this.y*t);
+    ctx.globalAlpha = 1;
+  }
+}
+
+class Enemy {
+  constructor(path, wave, type='normal') {
+    this.path = path;
+    this.type = type;
+    const currentWave = Math.max(1, wave); 
+    this.maxHp = Math.floor(15 * Math.pow(1.22, currentWave)); 
+    if(game.perks.startHpMult) this.maxHp = Math.floor(this.maxHp * game.perks.startHpMult);
+    this.speed = 1.0 + (currentWave * 0.04);
+    if(game.perks.slowMult) this.speed *= game.perks.slowMult;
+
+    this.shield = 0;
+    if (this.type === 'boss') { this.maxHp *= 6; this.speed *= 0.6; }
+    if (this.type === 'shield') { this.shield = 3; }
+    this.hp = this.maxHp;
+    this.progress = 0; this.alive = true; this.pos = {x:path[0].x, y:path[0].y};
+  }
+  update(dt) {
+    this.progress += this.speed * dt;
+    const i = Math.floor(this.progress);
+    if(i >= this.path.length-1) { this.alive=false; this.reached=true; return; }
+    const t = this.progress - i;
+    this.pos.x = this.path[i].x + (this.path[i+1].x - this.path[i].x)*t + 0.5;
+    this.pos.y = this.path[i].y + (this.path[i+1].y - this.path[i].y)*t + 0.5;
+  }
+  takeDmg(amt, isCrit=false) {
+    if (this.shield > 0) {
+      this.shield--;
+      game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y, "BLOCK", "#2ee6ff"));
+      return;
+    }
+    this.hp -= amt;
+    if(game.perks.goldPerHit) game.gold += game.perks.goldPerHit;
+    const color = isCrit ? '#ffd700' : '#fff';
+    game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y - 0.5, Math.floor(amt), color, isCrit));
+    
+    if(this.hp <= 0 && this.alive) {
+      this.alive = false;
+      this.killed = true;
+      spawnParticles(this.pos.x, this.pos.y, '#ff4d4d', 5);
+      if(game.perks.explodeDmg > 0) {
+        spawnParticles(this.pos.x, this.pos.y, '#ffa500', 8);
+        const dmg = this.maxHp * game.perks.explodeDmg;
+        game.enemies.forEach(e => {
+          if(e.alive && Math.hypot(e.pos.x-this.pos.x, e.pos.y-this.pos.y) < 2.0) e.takeDmg(dmg);
+        });
+      }
+    }
+  }
+}
+
+class Tower {
+  constructor(x, y, def, tier=1) {
+    this.x = x; this.y = y; this.def = def;
+    this.tier = tier; 
+    this.cool = 0; this.angle = 0;
+  }
+  update(dt, enemies) {
+    let fireRate = this.def.fire / (1 + game.globalMult.spd);
+    if(fireRate < 0.05) fireRate = 0.05;
+
+    this.cool -= dt;
+    if(this.cool <= 0) {
+      const range = this.def.range * (1 + game.globalMult.range + (this.tier-1)*0.1);
+      
+      // Calculate Damage
+      let effectiveTier = this.tier + (game.globalMult.tierBonus || 0);
+      let tierMult = Math.pow(1.5, effectiveTier - 1);
+      let dmg = this.def.dmg * (1 + game.globalMult.dmg) * tierMult;
+      let isCrit = false;
+      if(Math.random() < game.perks.crit) { dmg *= (game.perks.critMult || 2); isCrit = true; }
+
+      // Logic Branch
+      if (this.def.type === 'pierce') {
+        // Laser/Railgun: Find best line
+        const targets = enemies.filter(e => e.alive && Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5)) < range);
+        if (targets.length > 0) {
+           targets.sort((a,b) => b.progress - a.progress);
+           const primary = targets[0];
+           
+           // Calculate angle to primary
+           this.angle = Math.atan2(primary.pos.y-(this.y+0.5), primary.pos.x-(this.x+0.5));
+           
+           // Find enemies near this line
+           const hitList = this.getLineTargets(enemies, range, this.angle, this.def.pierce);
+           
+           hitList.forEach(e => {
+             e.takeDmg(dmg, isCrit);
+             spawnParticles(e.pos.x, e.pos.y, '#fff', 4);
+           });
+           
+           // Draw laser to the furthest hit
+           const furthest = hitList[hitList.length-1] || primary;
+           game.lasers.push({
+              x1:this.x+0.5, y1:this.y+0.5, x2:furthest.pos.x, y2:furthest.pos.y, 
+              color: isCrit ? '#fff' : this.def.color, 
+              width: isCrit ? 4 : 2, life:5
+           });
+           this.cool = fireRate;
+        }
+
+      } else {
+        // Normal / AOE
+        const targets = enemies.filter(e => e.alive && Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5)) < range);
+        if(targets.length > 0) {
+          targets.sort((a,b) => b.progress - a.progress);
+          const target = targets[0];
+
+          this.angle = Math.atan2(target.pos.y-(this.y+0.5), target.pos.x-(this.x+0.5));
+
+          if(this.def.type === 'aoe' || this.def.type === 'aoe_prox') {
+            targets.forEach(e => {
+              const dist = Math.hypot(e.pos.x-target.pos.x, e.pos.y-target.pos.y);
+              if(dist < 1.8) { // AOE radius
+                  let finalDmg = dmg;
+                  // Blaster Proximity Logic: Closer = More Damage
+                  if(this.def.type === 'aoe_prox') {
+                      const towerDist = Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5));
+                      // Example: At 0 dist -> 2x dmg, at max range -> 1x dmg
+                      const proxFactor = Math.max(0, 1.0 - (towerDist / range));
+                      finalDmg = dmg * (1.0 + proxFactor); 
+                  }
+                  e.takeDmg(finalDmg, isCrit);
+              }
+            });
+            spawnParticles(target.pos.x, target.pos.y, this.def.color, 8);
+          } else {
+            // Single
+            target.takeDmg(dmg, isCrit);
+            if(isCrit) spawnParticles(target.pos.x, target.pos.y, '#fff', 4);
+          }
+          
+          game.lasers.push({
+            x1:this.x+0.5, y1:this.y+0.5, x2:target.pos.x, y2:target.pos.y, 
+            color: isCrit ? '#fff' : this.def.color, 
+            width: isCrit ? 4 : 2,
+            life:5
+          });
+          this.cool = fireRate;
+        }
+      }
+    }
+  }
+
+  getLineTargets(enemies, range, angle, maxHits) {
+    const hits = [];
+    const tx = this.x+0.5, ty = this.y+0.5;
+    // Normalized direction
+    const dx = Math.cos(angle), dy = Math.sin(angle);
+    
+    // Sort all enemies by distance to tower
+    const candidates = enemies.filter(e => e.alive).map(e => {
+        return {e:e, dist: Math.hypot(e.pos.x-tx, e.pos.y-ty)};
+    }).sort((a,b) => a.dist - b.dist);
+
+    for(let c of candidates) {
+        if(c.dist > range) continue;
+        const ex = c.e.pos.x, ey = c.e.pos.y;
+        
+        // Project enemy vector onto shooting vector
+        const dot = (ex-tx)*dx + (ey-ty)*dy;
+        if (dot < 0) continue; // Behind tower
+
+        // Perpendicular distance
+        const perpDist = Math.abs((ex-tx)*(-dy) + (ey-ty)*dx);
+        
+        if (perpDist < 0.5) { // Hit width
+            hits.push(c.e);
+            if(hits.length >= maxHits) break;
+        }
+    }
+    return hits;
+  }
+}
+
+/* --- GAME SYSTEM --- */
+function init() {
+  window.onresize = resize;
+  resize();
+  resetGame();
+  requestAnimationFrame(loop);
+}
+
+function resetGame() {
+  TOWERS.forEach(t => t.unlocked = (t.id === 'laser'));
+  game = {
+    gold: 80, life: 20, wave: 0,
+    state: 'idle', 
+    path: generatePath(),
+    blocked: [],
+    towers: [], enemies: [], particles: [], lasers: [], dmgTexts: [],
+    globalMult: { dmg:0, range:0, spd:0, tierBonus:0 },
+    perks: { interest:0, crit:0, explodeDmg:0, critMult:2, startHpMult:1, goldPerHit:0, mythicChance: 0.003, slowMult:1 },
+    techCost: { dmg:100, range:100, spd:100, life:50 },
+    towerCounts: {}, 
+    artifacts: [], 
+    lifeAtWaveStart: 0,
+    enemiesToSpawn: 0,
+    enemiesSpawned: 0
+  };
+  generateObstacles();
+  TOWERS.forEach(t => game.towerCounts[t.id] = 0);
+  
+  renderShop(); 
+  showStarterScreen();
+}
+
+function getTowerCost(id) {
+  const t = TOWERS.find(x => x.id === id);
+  return Math.floor(t.cost * (1 + 0.2 * game.towerCounts[id]));
+}
+
+function generatePath() {
+  let p = []; let x=0; let y=Math.floor(GRID_H/2);
+  while(x < GRID_W) {
+    p.push({x,y});
+    x++;
+    if(x<GRID_W && Math.random()<0.45) {
+      let dy = Math.random()<0.5 ? -1 : 1;
+      if(y+dy>1 && y+dy<GRID_H-2) { p.push({x,y}); y+=dy; p.push({x,y}); y+=dy; }
+    }
+  }
+  return p;
+}
+
+function generateObstacles() {
+    game.blocked = [];
+    let attempts = 0;
+    while(game.blocked.length < 10 && attempts < 1000) {
+        let x = Math.floor(Math.random() * GRID_W);
+        let y = Math.floor(Math.random() * GRID_H);
+        // Check if on path
+        if(!game.path.some(p => p.x===x && p.y===y) && !game.blocked.some(b => b.x===x && b.y===y)) {
+             // Optional: Don't block adjacent to path to avoid choking? No, let's just random.
+             game.blocked.push({x,y});
+        }
+        attempts++;
+    }
+}
+
+function triggerWave() {
+  if(game.state !== 'idle') return;
+  game.lifeAtWaveStart = game.life; 
+  game.state = 'playing';
+  game.wave++;
+  document.getElementById('nextWaveBtn').disabled = true;
+  selectDef = null; selectedTower = null; 
+  renderShop();
+  const isBossWave = (game.wave % 10 === 0);
+  let count = isBossWave ? 1 : (5 + Math.floor(game.wave * 1.8));
+  game.enemiesToSpawn = count; 
+  game.enemiesSpawned = 0;     
+  
+  let spawned = 0;
+  let interval = setInterval(() => {
+    if(game.state !== 'playing') { clearInterval(interval); return; }
+    let type = 'normal';
+    if (isBossWave) { type = 'boss'; log(`WARNING: BOSS DETECTED`); } 
+    else if (game.wave >= 5 && Math.random() < 0.2) { type = 'shield'; }
+
+    game.enemies.push(new Enemy(game.path, game.wave, type));
+    game.enemiesSpawned++; 
+    spawned++;
+    if(spawned >= count) clearInterval(interval);
+  }, isBossWave ? 1000 : Math.max(200, 800 - game.wave*30));
+}
+
+function waveComplete(failed) {
+  if(failed) {
+      log("INTEGRITY COMPROMISED. RETRYING PREVIOUS WAVE...");
+      alert(`WAVE FAILED (Damage Taken).\nReturning to Wave ${game.wave - 1} to prepare.`);
+      game.state = 'idle';
+      game.wave--; 
+      game.enemies = [];
+      game.particles = [];
+      game.lasers = [];
+      // game.dmgTexts = []; // Don't clear dmg texts, let them fade
+      document.getElementById('nextWaveBtn').disabled = false;
+      if (game.wave < 1) game.wave = 1;
+      updateHUD();
+      return;
+  }
+
+  // Interest
+  if(game.perks.interest > 0) {
+    let bonus = Math.floor(game.gold * game.perks.interest);
+    if(bonus > 50) bonus = 50; 
+    if(bonus > 0) { game.gold += bonus; log(`INTEREST: +${bonus} CR`); }
+  }
+  game.state = 'drafting';
+  showDraftScreen();
+}
+
+/* --- LOOP --- */
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function checkGameOver() {
+  if(game.life <= 0) {
+    game.state = 'over';
+    log("MISSION FAILED.");
+    alert(`GAME OVER\nWAVE REACHED: ${game.wave}`);
+    resetGame();
+  }
+}
+
+function update() {
+  // Always update visuals
+  game.particles.forEach(p => p.update());
+  game.particles = game.particles.filter(p => p.life > 0);
+  game.lasers = game.lasers.filter(l => {l.life--; return l.life>0;});
+  
+  // FIX: Dmg Texts update outside playing state so they animate during draft
+  game.dmgTexts.forEach(d => d.update());
+  game.dmgTexts = game.dmgTexts.filter(d => d.life > 0);
+
+  if(game.state === 'playing') {
+    const dt = 0.016;
+    game.enemies.forEach(e => e.update(dt));
+    game.towers.forEach(t => t.update(dt, game.enemies));
+    
+    game.enemies = game.enemies.filter(e => {
+      if(!e.alive) {
+        if(e.reached) { 
+            game.life--; 
+            checkGameOver();
+        }
+        if(e.killed) {
+            let bounty = 6 + game.wave * 0.5;
+            if(e.type === 'boss') bounty *= 5;
+            if(e.type === 'shield') bounty *= 1.5;
+            game.gold += Math.floor(bounty);
+        }
+      }
+      return e.alive;
+    });
+
+    if(game.enemies.length === 0 && game.enemiesSpawned >= game.enemiesToSpawn) {
+       setTimeout(() => {
+         if(game.state === 'playing' && game.enemies.length === 0) {
+             if(game.life < game.lifeAtWaveStart) {
+                 waveComplete(true); 
+             } else {
+                 waveComplete(false); 
+             }
+         }
+       }, 500);
+    }
+  }
+  updateHUD();
+}
+
+function spawnParticles(x, y, c, n) {
+  for(let i=0; i<n; i++) game.particles.push(new Particle(x,y,c));
+}
+
+/* --- RENDERING --- */
+function draw() {
+  ctx.fillStyle = '#070b1a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  const offX = (canvas.width - GRID_W*TILE)/2;
+  const offY = (canvas.height - GRID_H*TILE)/2;
+  ctx.save(); ctx.translate(offX, offY);
+  
+  // Path
+  ctx.fillStyle = '#0f1724';
+  game.path.forEach(p => ctx.fillRect(p.x*TILE, p.y*TILE, TILE, TILE));
+  
+  // Blocked Tiles
+  ctx.fillStyle = '#1a1010';
+  ctx.strokeStyle = '#331111';
+  game.blocked.forEach(b => {
+      ctx.fillRect(b.x*TILE, b.y*TILE, TILE, TILE);
+      ctx.beginPath();
+      ctx.moveTo(b.x*TILE, b.y*TILE); ctx.lineTo((b.x+1)*TILE, (b.y+1)*TILE);
+      ctx.moveTo((b.x+1)*TILE, b.y*TILE); ctx.lineTo(b.x*TILE, (b.y+1)*TILE);
+      ctx.stroke();
+  });
+
+  ctx.strokeStyle = '#1a273a'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  game.path.forEach((p,i) => {
+    if(i===0) ctx.moveTo((p.x+0.5)*TILE, (p.y+0.5)*TILE);
+    else ctx.lineTo((p.x+0.5)*TILE, (p.y+0.5)*TILE);
+  });
+  ctx.stroke();
+  
+  // Towers
+  game.towers.forEach(t => {
+    ctx.fillStyle = t.def.color;
+    ctx.fillRect((t.x+0.5)*TILE - TILE*0.35, (t.y+0.5)*TILE - TILE*0.35, TILE*0.7, TILE*0.7);
+    ctx.save(); ctx.translate((t.x+0.5)*TILE, (t.y+0.5)*TILE); ctx.rotate(t.angle);
+    ctx.fillStyle = '#eee'; ctx.fillRect(0, -2, TILE*0.5, 4);
+    ctx.restore();
+    
+    // Tier Display
+    const tierText = "Lv." + t.tier;
+    ctx.fillStyle = "rgba(0,0,0,0.7)";
+    ctx.fillRect((t.x+0.45)*TILE, (t.y+0.6)*TILE, TILE*0.5, TILE*0.35);
+    
+    ctx.fillStyle = '#fff';
+    ctx.font = "bold " + (TILE*0.25) + "px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(tierText, (t.x+0.7)*TILE, (t.y+0.85)*TILE);
+
+    // Selection Halo
+    if(selectedTower === t) {
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+        ctx.strokeRect(t.x*TILE, t.y*TILE, TILE, TILE);
+    }
+  });
+  
+  // Enemies
+  game.enemies.forEach(e => {
+    let color = '#ff4d4d'; let size = TILE*0.3;
+    if (e.type === 'shield') { color = '#2ee6ff'; }
+    if (e.type === 'boss') { color = '#ff0000'; size = TILE*0.5; }
+
+    ctx.fillStyle = color; 
+    ctx.beginPath(); ctx.arc(e.pos.x*TILE, e.pos.y*TILE, size, 0, Math.PI*2); ctx.fill();
+    
+    if(e.shield > 0) {
+      ctx.strokeStyle = '#2ee6ff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(e.pos.x*TILE, e.pos.y*TILE, size + 4, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // HP Bar
+    const hp = e.hp/e.maxHp;
+    const barY = e.pos.y*TILE-12 - (e.type==='boss'?10:0);
+    const barX = e.pos.x*TILE-10;
+    
+    ctx.fillStyle = '#000'; ctx.fillRect(barX-1, barY-1, 22, 5); 
+    ctx.fillStyle = '#500'; ctx.fillRect(barX, barY, 20, 3);
+    ctx.fillStyle = '#f00'; ctx.fillRect(barX, barY, 20*hp, 3);
+  });
+  
+  // FX
+  game.lasers.forEach(l => {
+    ctx.strokeStyle = l.color; ctx.lineWidth = l.width || 2; ctx.globalAlpha = l.life/5;
+    ctx.beginPath(); ctx.moveTo(l.x1*TILE, l.y1*TILE); ctx.lineTo(l.x2*TILE, l.y2*TILE); ctx.stroke();
+  });
+  game.particles.forEach(p => p.draw(ctx, TILE));
+  game.dmgTexts.forEach(d => d.draw(ctx, TILE));
+
+  // Ghost / Selection Radius
+  if(selectDef && mousePos && mousePos.x > offX && mousePos.x < offX+GRID_W*TILE && mousePos.y > offY && mousePos.y < offY+GRID_H*TILE) {
+    const gx = Math.floor((mousePos.x - offX)/TILE);
+    const gy = Math.floor((mousePos.y - offY)/TILE);
+    
+    // Check blocked
+    const isBlocked = game.blocked.some(b => b.x===gx && b.y===gy);
+    
+    ctx.strokeStyle = isBlocked ? '#f00' : selectDef.color; ctx.lineWidth = 2;
+    ctx.strokeRect(gx*TILE, gy*TILE, TILE, TILE);
+    if(isBlocked) {
+        ctx.beginPath(); ctx.moveTo(gx*TILE, gy*TILE); ctx.lineTo((gx+1)*TILE, (gy+1)*TILE); ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.arc((gx+0.5)*TILE, (gy+0.5)*TILE, selectDef.range*TILE*(1+game.globalMult.range), 0, Math.PI*2);
+        ctx.fillStyle = selectDef.color; ctx.globalAlpha=0.1; ctx.fill(); ctx.globalAlpha=1;
+    }
+  }
+  else if(selectedTower) {
+      ctx.beginPath();
+      ctx.arc((selectedTower.x+0.5)*TILE, (selectedTower.y+0.5)*TILE, 
+        selectedTower.def.range*TILE*(1+game.globalMult.range + (selectedTower.tier-1)*0.1), 0, Math.PI*2);
+      ctx.fillStyle = '#fff'; ctx.globalAlpha=0.1; ctx.fill();
+      ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+
+/* --- UI: STARTER --- */
+function showStarterScreen() {
+    const modal = document.getElementById('modalOverlay');
+    const container = document.getElementById('cards');
+    const title = document.getElementById('modalTitle');
+    const sub = document.getElementById('modalSubtitle');
+    
+    container.innerHTML = '';
+    title.innerText = "INITIALIZE SYSTEM";
+    sub.innerText = "Select Startup Protocol";
+    modal.classList.remove('hidden');
+    
+    STARTERS.forEach(s => {
+        const el = document.createElement('div');
+        el.className = 'card starter';
+        el.innerHTML = `<h4 style="font-size:1.0rem">${s.name}</h4><p>${s.desc}</p>`;
+        el.onclick = () => {
+            s.fn(game);
+            modal.classList.add('hidden');
+            log(`PROTOCOL ACTIVE: ${s.name}`);
+            updateHUD();
+        };
+        container.appendChild(el);
+    });
+}
+
+/* --- UI: DRAFT --- */
+function showDraftScreen() {
+  const modal = document.getElementById('modalOverlay');
+  const container = document.getElementById('cards');
+  const title = document.getElementById('modalTitle');
+  const sub = document.getElementById('modalSubtitle');
+
+  container.innerHTML = '';
+  title.innerText = "WAVE CLEARED";
+  sub.innerText = "Select Artifact";
+  modal.classList.remove('hidden');
+  
+  let bpPool = BLUEPRINTS.filter(u => {
+     const t = TOWERS.find(t => t.id === u.target);
+     return t && !t.unlocked;
+  });
+  
+  const choices = [];
+  const isBossWaveCleared = (game.wave % 10 === 0);
+
+  for(let i=0; i<3; i++) {
+    if(Math.random() < game.perks.mythicChance) {
+        const midx = Math.floor(Math.random() * MYTHICS.length);
+        choices.push(MYTHICS[midx]);
+        continue;
+    }
+    
+    const bpChance = isBossWaveCleared ? 0.8 : 0.15;
+    if(bpPool.length > 0 && Math.random() < bpChance) {
+        const idx = Math.floor(Math.random() * bpPool.length);
+        choices.push(bpPool[idx]);
+        bpPool.splice(idx, 1);
+        continue;
+    }
+
+    const typeIdx = Math.floor(Math.random() * ARTIFACT_TYPES.length);
+    const type = ARTIFACT_TYPES[typeIdx];
+    choices.push({
+        typeId: type.id, rarityIdx: 0, name: type.name, 
+        baseDesc: type.desc, fn: type.fn, val: type.val
+    });
+  }
+
+  choices.forEach(u => {
+    const el = document.createElement('div');
+    if(u.rarity) el.className = `card ${u.rarity}`; 
+    else el.className = `card common`; 
+
+    let html = `<h4>${u.name}</h4>`;
+    
+    if(u.rarity === 'blueprint' || u.rarity === 'mythic') {
+        html += `<p>${u.desc}</p>`;
+    } else {
+        const val = u.val[0];
+        html += `<p>${u.baseDesc.replace('[X]', val)}</p>`;
+        html += `<p style="font-size:0.65rem; color:#666; margin-top:5px;">Collect 3 Common to Upgrade</p>`;
+    }
+    
+    el.innerHTML = html;
+    el.onclick = () => selectReward(u);
+    container.appendChild(el);
+  });
+}
+
+function selectReward(u) {
+  const modal = document.getElementById('modalOverlay');
+  
+  if(u.rarity === 'mythic') {
+    u.fn(game);
+    game.artifacts.push({typeId:u.id, rarityIdx:5, name:u.name, desc:u.desc, rarity:'mythic'});
+    log(`MYTHIC ACQUIRED: ${u.name}`);
+    spawnParticles(canvas.width/2, canvas.height/2, '#ff0055', 50);
+  } 
+  else if(u.rarity === 'blueprint') {
+    const t = TOWERS.find(t => t.id === u.target);
+    if(t) { t.unlocked = true; log(`NEW SCHEMATIC: ${t.name}`); renderShop(); }
+  } 
+  else {
+    addArtifactRecursive(u);
+  }
+
+  renderArtifacts();
+  modal.classList.add('hidden');
+  game.state = 'idle';
+  document.getElementById('nextWaveBtn').disabled = false;
+  if(document.getElementById('autoStartCheck').checked) setTimeout(triggerWave, 500);
+}
+
+function addArtifactRecursive(u) {
+    const others = game.artifacts.filter(a => a.typeId === u.typeId && a.rarityIdx === u.rarityIdx);
+    if(others.length >= 2) {
+        let removed = 0;
+        game.artifacts = game.artifacts.filter(a => {
+            if(removed < 2 && a.typeId === u.typeId && a.rarityIdx === u.rarityIdx) {
+                removed++; return false;
+            }
+            return true;
+        });
+        const nextRarityIdx = u.rarityIdx + 1;
+        if(nextRarityIdx < RARITIES.length) {
+            log(`SYNTHESIS: ${u.name} -> ${RARITIES[nextRarityIdx].toUpperCase()}`);
+            spawnParticles(canvas.width/2, canvas.height/2, RARITY_COLORS[RARITIES[nextRarityIdx]], 20);
+            
+            const nextU = {
+                typeId: u.typeId, rarityIdx: nextRarityIdx, name: u.name,
+                baseDesc: u.baseDesc, fn: u.fn, val: u.val
+            };
+            addArtifactRecursive(nextU);
+        } else {
+            applyArtifactStats(u);
+            game.artifacts.push(createArtifactData(u));
+        }
+    } else {
+        applyArtifactStats(u);
+        game.artifacts.push(createArtifactData(u));
+        log(`OBTAINED: ${u.name} (${RARITIES[u.rarityIdx]})`);
+    }
+}
+
+function applyArtifactStats(u) {
+    const val = u.val[u.rarityIdx];
+    u.fn(game, val);
+}
+
+function createArtifactData(u) {
+    const rarityName = RARITIES[u.rarityIdx];
+    const val = u.val[u.rarityIdx];
+    return {
+        typeId: u.typeId, rarityIdx: u.rarityIdx, rarity: rarityName,
+        name: u.name, desc: u.baseDesc.replace('[X]', val)
+    };
+}
+
+function renderArtifacts() {
+  const d = document.getElementById('artifacts'); d.innerHTML = '';
+  game.artifacts.sort((a,b) => (b.rarityIdx||0) - (a.rarityIdx||0));
+  const grouped = {};
+  game.artifacts.forEach(a => {
+    const key = a.typeId + '_' + a.rarityIdx;
+    if(!grouped[key]) grouped[key] = { ...a, count: 0 };
+    grouped[key].count++;
+  });
+  Object.values(grouped).forEach(a => {
+    const el = document.createElement('div');
+    el.className = `artifact ${a.rarity}`;
+    el.innerText = a.name.substring(0,1);
+    el.dataset.desc = `[${a.rarity.toUpperCase()}] ${a.name} x${a.count}\n${a.desc}\n(Collect 3 to Upgrade)`;
+    if(a.count > 1) {
+        const badge = document.createElement('div');
+        badge.className = 'artifact-count';
+        badge.innerText = a.count;
+        el.appendChild(badge);
+    }
+    d.appendChild(el);
+  });
+}
+
+function resize() {
+  canvas.width = document.getElementById('left').clientWidth;
+  canvas.height = document.getElementById('left').clientHeight;
+  TILE = Math.min(canvas.width/GRID_W, canvas.height/GRID_H) * 0.9;
+}
+
+function updateHUD() {
+  document.getElementById('gold').innerText = Math.floor(game.gold);
+  document.getElementById('life').innerText = game.life;
+  document.getElementById('wave').innerText = game.wave;
+}
+
+function log(m) {
+  const l = document.getElementById('log');
+  const d = document.createElement('div'); d.className = 'log-entry'; d.innerText = `> ${m}`;
+  l.prepend(d);
+}
+
+canvas.addEventListener('mousemove', e => {
+  const r = canvas.getBoundingClientRect(); mousePos = {x:e.clientX-r.left, y:e.clientY-r.top};
+});
+
+canvas.addEventListener('click', () => {
+  if(game.state === 'over' || !game) return;
+  const offX = (canvas.width - GRID_W*TILE)/2;
+  const offY = (canvas.height - GRID_H*TILE)/2;
+  const gx = Math.floor((mousePos.x - offX)/TILE);
+  const gy = Math.floor((mousePos.y - offY)/TILE);
+  if(gx<0 || gx>=GRID_W || gy<0 || gy>=GRID_H) return;
+
+  const clickedTower = game.towers.find(t => t.x===gx && t.y===gy);
+  
+  // Buy Mode
+  if(selectDef) {
+      if(game.path.some(p => p.x===gx && p.y===gy)) { log("INVALID POSITION"); return; }
+      if(game.blocked.some(b => b.x===gx && b.y===gy)) { log("SECTOR BLOCKED"); return; }
+      if(clickedTower) { log("OCCUPIED"); return; }
+      
+      const cost = getTowerCost(selectDef.id);
+      if(game.gold >= cost) {
+        game.gold -= cost;
+        game.towerCounts[selectDef.id]++; 
+        game.towers.push(new Tower(gx, gy, selectDef));
+        spawnParticles((gx+0.5)*TILE+offX, (gy+0.5)*TILE+offY, '#2ee6ff', 8);
+        renderShop(); 
+      } else log("NO CREDITS");
+      return;
+  }
+
+  // Select / Merge Mode
+  if(clickedTower) {
+      if(selectedTower && selectedTower !== clickedTower) {
+          if(selectedTower.def.id === clickedTower.def.id && selectedTower.tier === clickedTower.tier) {
+              const newTier = selectedTower.tier + 1;
+              log(`SYNTHESIS COMPLETE: TIER ${newTier}`);
+              clickedTower.tier = newTier;
+              game.towers = game.towers.filter(t => t !== selectedTower);
+              spawnParticles((clickedTower.x+0.5)*TILE+offX, (clickedTower.y+0.5)*TILE+offY, '#fff', 20);
+              selectedTower = null; 
+              return;
+          } else {
+             selectedTower = clickedTower;
+             log(`SELECTED: ${clickedTower.def.name} (Lv.${clickedTower.tier})`);
+             return; 
+          }
+      }
+      selectedTower = clickedTower;
+      log(`SELECTED: ${clickedTower.def.name} (Lv.${clickedTower.tier})`);
+  } else if(selectedTower) {
+      selectedTower = null;
+  }
+});
+
+function renderShop() {
+  const c = document.getElementById('shopList'); c.innerHTML = '';
+  TOWERS.forEach(t => {
+    if(!t.unlocked) return;
+    const currentCost = getTowerCost(t.id);
+    const b = document.createElement('button'); b.className = 'btn';
+    if(selectDef && selectDef.id === t.id) b.style.borderColor = '#fff';
+    b.innerHTML = `${t.name}<br><span style="font-size:0.8em;opacity:0.7">${currentCost} CR</span>`;
+    b.onclick = () => { selectDef = t; selectedTower = null; renderShop(); };
+    c.appendChild(b);
+  });
+}
+
+function renderTech() {
+  const setTxt = (id, key) => document.getElementById(`cost_${id}`).innerText = game.techCost[key];
+  setTxt('dmg', 'dmg'); setTxt('range', 'range'); setTxt('spd', 'spd');
+  setTxt('life', 'life');
+}
+
+function buyTech(type) {
+  const cost = game.techCost[type];
+  if(game.gold >= cost) {
+    game.gold -= cost;
+    if(type === 'life') {
+      game.life = Math.min(game.life + 5, 20 + game.wave);
+      game.techCost[type] = Math.floor(game.techCost[type] * 1.5);
+      log("INTEGRITY RESTORED");
+    } else {
+      if(type==='dmg') game.globalMult.dmg += 0.1;
+      if(type==='range') game.globalMult.range += 0.1;
+      if(type==='spd') game.globalMult.spd += 0.05;
+      game.techCost[type] = Math.floor(game.techCost[type] * 1.3);
+      log(`TECH UPGRADE: ${type.toUpperCase()}`);
+    }
+    renderTech();
+  } else log("INSUFFICIENT FUNDS");
+}
+
+window.addEventListener('keydown', e => {
+  if(e.code==='Enter') triggerWave();
+  if(e.code==='Escape') { selectDef=null; selectedTower=null; renderShop(); log("CANCELLED"); }
+});
+
+init();
+</script>
 </body>
 </html>
