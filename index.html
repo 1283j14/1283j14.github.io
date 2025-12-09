@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>Hyper Rogue TD Neo - v4 DPS & Artifacts</title>
+<title>Hyper Rogue TD Neo - v5 Final</title>
 <style>
   :root{
     --bg:#050914;
@@ -171,10 +171,12 @@ const TOWERS = [
   {id:'blaster', name:'BLASTER', cost:100, dmg:10, fire:0.8, range:3.0, color:'#ff4d4d', type:'aoe_prox', unlocked:false},
   {id:'sniper', name:'SNIPER', cost:150, dmg:50, fire:2.0, range:9.0, color:'#00ff88', type:'single', unlocked:false},
   {id:'rocket', name:'ROCKET', cost:250, dmg:60, fire:1.8, range:4.5, color:'#ffaa00', type:'aoe', unlocked:false},
-  {id:'railgun', name:'RAILGUN', cost:400, dmg:150, fire:3.5, range:14.0, color:'#ff00ff', type:'pierce', pierce:10, unlocked:false}
+  {id:'railgun', name:'RAILGUN', cost:400, dmg:150, fire:3.5, range:14.0, color:'#ff00ff', type:'pierce', pierce:10, unlocked:false},
+  // [NEW] AMPLIFIER: Support type, buffs neighbors
+  {id:'booster', name:'AMPLIFIER', cost:300, dmg:0, fire:0, range:0, color:'#8888ff', type:'support', unlocked:false}
 ];
 
-// Base Artifact Types [UPDATED]
+// Base Artifact Types
 const ARTIFACT_TYPES = [
   {id:'atk', name:'Core', desc:'DMG +[X]%', val:[10, 20, 35, 55, 80], fn:(g,v)=>g.globalMult.dmg+=v/100},
   {id:'spd', name:'Servo', desc:'SPD +[X]%', val:[10, 20, 35, 55, 80], fn:(g,v)=>g.globalMult.spd+=v/100},
@@ -182,7 +184,6 @@ const ARTIFACT_TYPES = [
   {id:'eco', name:'Chip', desc:'Interest +[X]%', val:[5, 10, 15, 25, 40], fn:(g,v)=>g.perks.interest+=v/100},
   {id:'crit', name:'Aim', desc:'Crit +[X]%', val:[5, 10, 15, 25, 40], fn:(g,v)=>g.perks.crit+=v/100},
   {id:'boom', name:'Powder', desc:'Explode [X]% DMG', val:[15, 30, 50, 80, 120], fn:(g,v)=>g.perks.explodeDmg+=v/100},
-  // New Artifacts
   {id:'coil', name:'Overload', desc:'Crit DMG +[X]%', val:[50, 80, 120, 170, 230], fn:(g,v)=>g.perks.critMult += v/100},
   {id:'armor', name:'Hardlight', desc:'Max Integrity +[X]', val:[2, 4, 7, 10, 15], fn:(g,v)=>{ g.maxLife += v; g.life += v; }},
   {id:'burst', name:'Q.Charge', desc:'Start Burst +[X]s', val:[2, 3, 4, 5, 6], fn:(g,v)=>g.perks.startBoost += v}
@@ -194,14 +195,13 @@ const BLUEPRINTS = [
   {id:'unlock_sniper', name:'BP: SNIPER', rarity:'blueprint', desc:'Unlocks SNIPER', type:'unlock', target:'sniper'},
   {id:'unlock_rocket', name:'BP: ROCKET', rarity:'blueprint', desc:'Unlocks ROCKET\n(3x3 Massive AOE)', type:'unlock', target:'rocket'},
   {id:'unlock_railgun', name:'BP: RAILGUN', rarity:'blueprint', desc:'Unlocks RAILGUN\n(Dmg increases w/ dist)', type:'unlock', target:'railgun'},
+  {id:'unlock_booster', name:'BP: AMPLIFIER', rarity:'blueprint', desc:'Unlocks AMPLIFIER\n(Buffs Neighbors)', type:'unlock', target:'booster'},
 ];
-// Mythic Pool [UPDATED]
+// Mythic Pool
 const MYTHICS = [
   {id:'god', name:'DEUS EX', rarity:'mythic', desc:'MYTHIC: All Towers Tier +1 Stats', fn: g=>g.globalMult.tierBonus+=1},
   {id:'midas', name:'MIDAS TOUCH', rarity:'mythic', desc:'MYTHIC: +1 Gold per Hit', fn: g=>g.perks.goldPerHit+=1},
-  {id:'void_old', name:'EVENT HORIZON', rarity:'mythic', desc:'MYTHIC: Enemies start with 50% HP', fn: g=>g.perks.startHpMult=0.5},
   {id:'time', name:'CHRONO SHIFT', rarity:'mythic', desc:'MYTHIC: Enemies 30% Slower', fn: g=>g.perks.slowMult=0.7},
-  // New Mythics
   {id:'rot', name:'CORRUPTION CORE', rarity:'mythic', desc:'MYTHIC: Kill reduces nearby Armor', fn: g=>g.perks.debuffArmor=0.1},
   {id:'risk', name:'VOID CONTRACT', rarity:'mythic', desc:'MYTHIC: HP=1, DMG x4 (Risky)', fn: g=>{ g.maxLife=1; g.life=1; g.globalMult.dmg+=3; }},
   {id:'copy', name:'QUANTUM DOUBLER', rarity:'mythic', desc:'MYTHIC: 50% Chance Double Hit', fn: g=>g.perks.doubleHit=0.5},
@@ -327,7 +327,6 @@ class Enemy {
   takeDmg(amt, isCrit=false, srcId='unknown') {
     if (this.type === 'ghost') {
         const tDef = TOWERS.find(t=>t.id===srcId);
-        // If unknown (e.g. explode), assume not pierce
         const isPierce = tDef ? tDef.type==='pierce' : false;
         if (!isPierce && Math.random() < 0.5) {
             game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y - 0.5, "MISS", "#aaa"));
@@ -344,7 +343,6 @@ class Enemy {
     let finalDmg = Math.max(1, amt - this.armor);
     this.hp -= finalDmg;
     
-    // DPS Recording
     if(srcId && game.dpsCurrent[srcId] !== undefined) {
         game.dpsCurrent[srcId] += finalDmg;
     }
@@ -359,12 +357,15 @@ class Enemy {
       this.killed = true;
       spawnParticles(this.pos.x, this.pos.y, '#ff4d4d', 5);
       
-      // Corruption Core: Debuff nearby
+      // [NEW] Boss Reward Logic
+      if(this.type === 'boss') {
+          grantBossReward();
+      }
+
       if(game.perks.debuffArmor) {
          game.enemies.forEach(e => {
              if(e.alive && Math.hypot(e.pos.x-this.pos.x, e.pos.y-this.pos.y) < 3.0) {
                  e.armor = Math.max(0, e.armor - 2);
-                 // If shield exists, maybe strip one? simplified to armor/shield break
                  if(e.shield > 0) e.shield--; 
                  spawnParticles(e.pos.x, e.pos.y, '#550055', 3);
              }
@@ -388,10 +389,34 @@ class Tower {
     this.tier = tier; 
     this.cool = 0; this.angle = 0;
   }
+  
+  // [NEW] Check neighbors for Amplifier towers
+  getNeighborBuffs() {
+    let buffDmg = 1.0;
+    let buffSpd = 1.0;
+    for(let dx=-1; dx<=1; dx++) {
+        for(let dy=-1; dy<=1; dy++) {
+            if(dx===0 && dy===0) continue;
+            const tx = this.x + dx;
+            const ty = this.y + dy;
+            const neighbor = game.towers.find(t => t.x === tx && t.y === ty);
+            if(neighbor && neighbor.def.id === 'booster') {
+                // Stacking 1.2x multipliers
+                buffDmg *= 1.2;
+                buffSpd *= 1.2;
+            }
+        }
+    }
+    return {dmg: buffDmg, spd: buffSpd};
+  }
+
   update(dt, enemies) {
-    let spdMult = 1 + game.globalMult.spd;
-    
-    // Quick Charge Artifact
+    if(this.def.type === 'support') return; // Amplifiers don't shoot
+
+    // Apply Buffs
+    const buffs = this.getNeighborBuffs();
+
+    let spdMult = (1 + game.globalMult.spd) * buffs.spd;
     if(game.perks.startBoost > 0 && game.waveStartTime) {
         if(Date.now() - game.waveStartTime < game.perks.startBoost * 1000) {
             spdMult *= 2; 
@@ -404,14 +429,14 @@ class Tower {
     this.cool -= dt;
     if(this.cool <= 0) {
       const range = this.def.range * (1 + game.globalMult.range + (this.tier-1)*0.1);
-      // Calculate Damage
+      
       let effectiveTier = this.tier + (game.globalMult.tierBonus || 0);
       let tierMult = Math.pow(1.5, effectiveTier - 1);
-      let dmg = this.def.dmg * (1 + game.globalMult.dmg) * tierMult;
+      let dmg = this.def.dmg * (1 + game.globalMult.dmg) * tierMult * buffs.dmg;
+      
       let isCrit = false;
       if(Math.random() < game.perks.crit) { dmg *= (game.perks.critMult); isCrit = true; }
 
-      // Logic Branch
       if (this.def.type === 'pierce') {
         const targets = enemies.filter(e => e.alive && Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5)) < range);
         if (targets.length > 0) {
@@ -440,7 +465,6 @@ class Tower {
         }
 
       } else {
-        // Normal / AOE
         const targets = enemies.filter(e => e.alive && Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5)) < range);
         if(targets.length > 0) {
           targets.sort((a,b) => b.progress - a.progress);
@@ -465,7 +489,6 @@ class Tower {
             });
             spawnParticles(target.pos.x, target.pos.y, this.def.color, 8);
           } else {
-            // Single
             this.applyHit(target, dmg, isCrit);
             if(isCrit) spawnParticles(target.pos.x, target.pos.y, '#fff', 4);
           }
@@ -480,12 +503,10 @@ class Tower {
     }
   }
 
-  // Wrapper for hitting enemy to handle Quantum Doubler
   applyHit(e, dmg, isCrit) {
       e.takeDmg(dmg, isCrit, this.def.id);
       spawnParticles(e.pos.x, e.pos.y, '#fff', 4);
       
-      // Quantum Doubler Logic
       if(game.perks.doubleHit > 0 && Math.random() < game.perks.doubleHit) {
           setTimeout(() => {
              if(e.alive) {
@@ -549,7 +570,6 @@ function resetGame() {
     enemiesToSpawn: 0,
     enemiesSpawned: 0,
     waveStartTime: 0,
-    // DPS Stats
     dpsCurrent: {},
     dpsLastSecond: {},
     lastDpsUpdate: 0
@@ -629,6 +649,29 @@ function triggerWave() {
   }, isBossWave ? 1000 : Math.max(200, 800 - game.wave*30));
 }
 
+// [NEW] Grant Artifact on Boss Kill
+function grantBossReward() {
+    const rand = Math.random();
+    // Weighted Random for Rare(2) or higher
+    let rarityIdx = 2; // Rare (default)
+    if(rand < 0.3) rarityIdx = 3; // Epic (30%)
+    if(rand < 0.05) rarityIdx = 4; // Legendary (5%)
+
+    // Select random type
+    const typeIdx = Math.floor(Math.random() * ARTIFACT_TYPES.length);
+    const type = ARTIFACT_TYPES[typeIdx];
+
+    const u = {
+        typeId: type.id, rarityIdx: rarityIdx, name: type.name,
+        baseDesc: type.desc, fn: type.fn, val: type.val
+    };
+
+    log(`BOSS DEFEATED! DROP: ${type.name} [${RARITIES[rarityIdx].toUpperCase()}]`);
+    spawnParticles(canvas.width/2, canvas.height/2, RARITY_COLORS[RARITIES[rarityIdx]], 50);
+    addArtifactRecursive(u);
+    renderArtifacts();
+}
+
 function waveComplete(failed) {
   if(failed) {
       log("INTEGRITY COMPROMISED. RETRYING PREVIOUS WAVE...");
@@ -652,7 +695,6 @@ function waveComplete(failed) {
   showDraftScreen();
 }
 
-/* --- LOOP --- */
 function loop() {
   update();
   draw();
@@ -670,8 +712,6 @@ function checkGameOver() {
 
 function update() {
   const now = Date.now();
-  
-  // DPS Meter Update (Every 1s)
   if(now - game.lastDpsUpdate > 1000) {
       updateDpsUI();
       game.lastDpsUpdate = now;
@@ -726,7 +766,6 @@ function spawnParticles(x, y, c, n) {
   for(let i=0; i<n; i++) game.particles.push(new Particle(x,y,c));
 }
 
-/* --- UI: DPS --- */
 function updateDpsUI() {
     const list = document.getElementById('dpsList');
     list.innerHTML = '';
@@ -758,8 +797,6 @@ function updateDpsUI() {
     });
 }
 
-
-/* --- RENDERING --- */
 function draw() {
   ctx.fillStyle = '#070b1a'; ctx.fillRect(0,0,canvas.width,canvas.height);
   const offX = (canvas.width - GRID_W*TILE)/2;
@@ -790,10 +827,18 @@ function draw() {
   // Towers
   game.towers.forEach(t => {
     ctx.fillStyle = t.def.color;
-    ctx.fillRect((t.x+0.5)*TILE - TILE*0.35, (t.y+0.5)*TILE - TILE*0.35, TILE*0.7, TILE*0.7);
-    ctx.save(); ctx.translate((t.x+0.5)*TILE, (t.y+0.5)*TILE); ctx.rotate(t.angle);
-    ctx.fillStyle = '#eee'; ctx.fillRect(0, -2, TILE*0.5, 4);
-    ctx.restore();
+    // Draw Amplifier logic slightly different
+    if(t.def.type === 'support') {
+         ctx.strokeStyle = t.def.color; ctx.lineWidth = 2;
+         ctx.strokeRect((t.x+0.5)*TILE - TILE*0.35, (t.y+0.5)*TILE - TILE*0.35, TILE*0.7, TILE*0.7);
+         ctx.font = "bold 10px sans-serif"; ctx.textAlign="center"; ctx.fillStyle=t.def.color;
+         ctx.fillText("BUFF", (t.x+0.5)*TILE, (t.y+0.55)*TILE);
+    } else {
+         ctx.fillRect((t.x+0.5)*TILE - TILE*0.35, (t.y+0.5)*TILE - TILE*0.35, TILE*0.7, TILE*0.7);
+         ctx.save(); ctx.translate((t.x+0.5)*TILE, (t.y+0.5)*TILE); ctx.rotate(t.angle);
+         ctx.fillStyle = '#eee'; ctx.fillRect(0, -2, TILE*0.5, 4);
+         ctx.restore();
+    }
     
     // Tier Display
     const tierText = "Lv." + t.tier;
@@ -863,23 +908,35 @@ function draw() {
     if(isBlocked) {
         ctx.beginPath(); ctx.moveTo(gx*TILE, gy*TILE); ctx.lineTo((gx+1)*TILE, (gy+1)*TILE); ctx.stroke();
     } else {
-        ctx.beginPath();
-        ctx.arc((gx+0.5)*TILE, (gy+0.5)*TILE, selectDef.range*TILE*(1+game.globalMult.range), 0, Math.PI*2);
-        ctx.fillStyle = selectDef.color; ctx.globalAlpha=0.1;
-        ctx.fill(); ctx.globalAlpha=1;
+        if(selectDef.type === 'support') {
+            // Visualize support area
+             ctx.fillStyle = selectDef.color; ctx.globalAlpha=0.2;
+             ctx.fillRect((gx-1)*TILE, (gy-1)*TILE, TILE*3, TILE*3);
+             ctx.globalAlpha=1;
+        } else {
+            ctx.beginPath();
+            ctx.arc((gx+0.5)*TILE, (gy+0.5)*TILE, selectDef.range*TILE*(1+game.globalMult.range), 0, Math.PI*2);
+            ctx.fillStyle = selectDef.color; ctx.globalAlpha=0.1;
+            ctx.fill(); ctx.globalAlpha=1;
+        }
     }
   }
   else if(selectedTower) {
-      ctx.beginPath();
-      ctx.arc((selectedTower.x+0.5)*TILE, (selectedTower.y+0.5)*TILE, 
-        selectedTower.def.range*TILE*(1+game.globalMult.range + (selectedTower.tier-1)*0.1), 0, Math.PI*2);
-      ctx.fillStyle = '#fff'; ctx.globalAlpha=0.1; ctx.fill();
-      ctx.globalAlpha=1;
+      if(selectedTower.def.type === 'support') {
+         ctx.fillStyle = selectedTower.def.color; ctx.globalAlpha=0.2;
+         ctx.fillRect((selectedTower.x-1)*TILE, (selectedTower.y-1)*TILE, TILE*3, TILE*3);
+         ctx.globalAlpha=1;
+      } else {
+         ctx.beginPath();
+         ctx.arc((selectedTower.x+0.5)*TILE, (selectedTower.y+0.5)*TILE, 
+            selectedTower.def.range*TILE*(1+game.globalMult.range + (selectedTower.tier-1)*0.1), 0, Math.PI*2);
+         ctx.fillStyle = '#fff'; ctx.globalAlpha=0.1; ctx.fill();
+         ctx.globalAlpha=1;
+      }
   }
   ctx.restore();
 }
 
-/* --- UI: STARTER --- */
 function showStarterScreen() {
     const modal = document.getElementById('modalOverlay');
     const container = document.getElementById('cards');
@@ -905,7 +962,6 @@ function showStarterScreen() {
     });
 }
 
-/* --- UI: DRAFT --- */
 function showDraftScreen() {
   const modal = document.getElementById('modalOverlay');
   const container = document.getElementById('cards');
