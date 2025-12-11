@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>Hyper Rogue TD Neo - v25 Overcrit</title>
+<title>Hyper Rogue TD Neo - v26 Reborn</title>
 <style>
   :root{
     --bg:#050914;
@@ -11,6 +11,7 @@
     --rare:#2e8cff; --epic:#a335ee; --legend:#ffaa00;
     --mythic:#ff0055; --danger:#ff4d4d;
     --text-main:#eaf6ff;
+    --text-shadow: 2px 2px 0px #000; /* Enhanced visibility */
   }
   html,body{height:100%;margin:0;font-family:'Courier New', sans-serif;background:var(--bg);color:var(--text-main);overflow:hidden;user-select:none;}
   
@@ -22,6 +23,17 @@
   }
   .hidden {display:none !important;}
 
+  /* ANIMATIONS */
+  @keyframes flashRed {
+    0% { background: rgba(255, 0, 0, 0.5); }
+    100% { background: transparent; }
+  }
+  .flash-overlay {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    pointer-events: none; z-index: 9999;
+    animation: flashRed 0.5s ease-out forwards;
+  }
+
   /* GAME SCREEN */
   #gameScreen {
     display:flex; flex-direction:row;
@@ -29,33 +41,41 @@
     position:relative;
   }
 
-  /* LEFT SIDE (MAP & OVERLAYS) */
+  /* LEFT SIDE (MAP) */
   #left {
-    flex:1; display:flex; flex-direction:column; gap:0; position:relative;
-    height: 100%; border-radius:8px; overflow: hidden;
-    box-shadow:inset 0 0 20px rgba(0,0,0,0.8);
+    flex:1; display:flex; flex-direction:column; gap:8px; position:relative;
+    height: 100%;
   }
   canvas {
-    background:#070b1a; display:block; width:100%; height:100%;
-    cursor:crosshair;
+    background:#070b1a; border-radius:8px; display:block; width:100%; height:100%;
+    cursor:crosshair; box-shadow:inset 0 0 30px rgba(0,0,0,0.9);
   }
 
-  /* RIGHT SIDE (PANELS) */
+  /* RIGHT SIDE (PANEL) */
   #right {
     width:360px; display:flex; flex-direction:column; gap:8px; z-index:5;
     height: 100%;
   }
   .panel{
-    background:rgba(15,23,36,0.95); padding:10px; border-radius:6px; border:1px solid #23344a;
+    background:rgba(12, 18, 28, 0.98); padding:10px; border-radius:6px; border:1px solid #23344a;
     display:flex; flex-direction:column; gap:5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
   .panel.grow { flex: 1; min-height: 0; } 
 
   /* --- UI COMPONENTS --- */
-  h3{margin:0 0 5px 0;font-size:0.85rem;color:var(--accent);border-bottom:1px solid #23344a;padding-bottom:5px;display:flex;justify-content:space-between;}
+  h3{
+      margin:0 0 5px 0; font-size:0.9rem; color:var(--accent); 
+      border-bottom:1px solid #23344a; padding-bottom:5px; 
+      display:flex; justify-content:space-between; text-shadow: var(--text-shadow);
+  }
   
-  .btn {background:linear-gradient(180deg, #1a273a, #0f1724);border:1px solid var(--accent);color:var(--accent);padding:8px;cursor:pointer;border-radius:4px;transition:0.2s;font-weight:bold;font-family:inherit;}
-  .btn:hover {background:var(--accent);color:#000;box-shadow:0 0 10px var(--accent);}
+  .btn {
+      background:linear-gradient(180deg, #1a273a, #0f1724); border:1px solid var(--accent); color:var(--accent);
+      padding:8px; cursor:pointer; border-radius:4px; transition:0.2s; font-weight:bold; font-family:inherit;
+      text-shadow: 1px 1px 0 #000;
+  }
+  .btn:hover {background:var(--accent); color:#000; box-shadow:0 0 10px var(--accent); text-shadow: none;}
   .btn:disabled {border-color:#555;color:#555;pointer-events:none;background:#111;}
   
   .btn-big {padding:15px 40px; font-size:1.2rem; margin-top:30px; margin-bottom: 50px;}
@@ -67,44 +87,54 @@
     position:absolute; top:10px; left:10px; right:10px; height:40px;
     display:flex; gap:15px; pointer-events:none; z-index: 100;
   }
-  .stat {background:rgba(15,23,36,0.9);padding:5px 15px;border-radius:4px;border:1px solid rgba(46,230,255,0.3);backdrop-filter:blur(4px);pointer-events:auto; height: 100%; box-sizing: border-box;}
-  .label {font-size:0.6rem;color:var(--accent);opacity:0.8;letter-spacing:1px;}
-  .val {font-size:1.1rem;font-weight:bold;color:#fff;}
+  .stat {
+      background:rgba(10, 15, 25, 0.95); padding:5px 15px; border-radius:4px; 
+      border:1px solid rgba(46,230,255,0.3); backdrop-filter:blur(4px); 
+      pointer-events:auto; height: 100%; box-sizing: border-box;
+      display: flex; flex-direction: column; justify-content: center;
+  }
+  .label {font-size:0.65rem; color:var(--accent); opacity:1.0; letter-spacing:1px; text-shadow: 1px 1px 0 #000;}
+  .val {font-size:1.2rem; font-weight:bold; color:#fff; text-shadow: 2px 2px 0 #000;}
   .controls {pointer-events:auto; display:flex; gap:10px; align-items:center;}
   
+  /* GOLD RUSH INDICATOR */
+  .gold-rush { border-color: #ffd700 !important; box-shadow: 0 0 10px #ffd700; animation: pulseGold 1s infinite alternate; }
+  .gold-rush .label { color: #ffd700; }
+  @keyframes pulseGold { 0% { box-shadow: 0 0 5px #ffd700; } 100% { box-shadow: 0 0 15px #ffd700; } }
+
   .speed-ctrl { display:flex; gap:2px; background:#000; border-radius:4px; overflow:hidden; border:1px solid #444; }
-  .spd-btn { background:#111; color:#666; border:none; padding:5px 10px; font-size:0.8rem; cursor:pointer; font-weight:bold; }
+  .spd-btn { background:#111; color:#888; border:none; padding:5px 10px; font-size:0.8rem; cursor:pointer; font-weight:bold; }
   .spd-btn.active { background:var(--accent); color:#000; }
 
   /* OVERLAYS */
   #pauseOverlay, #modalOverlay, #newsOverlay {
     position:absolute; top:0; left:0; width:100%; height:100%;
-    background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); z-index:150;
+    background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); z-index:50;
     display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px;
   }
   .pause-title {font-size:3rem; color:var(--accent); letter-spacing:5px; text-shadow:0 0 15px var(--accent);}
 
   /* BOSS HUD */
   #bossHud {
-    position:absolute; top:60px; left:50%; transform:translateX(-50%); width:60%;
+    position:absolute; top:60px; left:50%; transform:translateX(-50%); width:70%;
     z-index:90; display:flex; flex-direction:column; align-items:center; pointer-events:none;
-    text-shadow:0 0 5px #000; background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 8px; border: 1px solid var(--danger);
+    text-shadow:0 0 5px #000; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; border: 1px solid var(--danger);
   }
-  .boss-warning { font-size: 0.9rem; color: var(--danger); font-weight: bold; letter-spacing: 3px; animation: blink 1s infinite; margin-bottom: 5px; }
-  .boss-bar-bg {width:100%; height:12px; background:#300; border:1px solid #500; border-radius:4px; overflow:hidden; position:relative;}
+  .boss-warning { font-size: 1.0rem; color: var(--danger); font-weight: bold; letter-spacing: 3px; animation: blink 1s infinite; margin-bottom: 5px; }
+  .boss-bar-bg {width:100%; height:16px; background:#200; border:1px solid #500; border-radius:4px; overflow:hidden; position:relative;}
   .boss-bar-fill {height:100%; background:linear-gradient(90deg, #f00, #a00); width:0%; transition:width 0.1s;}
-  .boss-val {font-size:0.8rem; color:#fff; margin-top:2px; font-weight: bold;}
+  .boss-val {font-size:0.9rem; color:#fff; margin-top:2px; font-weight: bold;}
   @keyframes blink { 50% { opacity: 0.5; } }
 
-  /* MENU SCREEN */
+  /* MENU / UPGRADE SCREEN */
   #upgradeScreen {padding:20px; overflow-y:auto; align-items:center; background:var(--bg);}
   .header {width:100%; max-width:1000px; display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:20px;}
   .cf-display {font-size:1.5rem; color:var(--legend); font-weight:bold; text-shadow:0 0 10px var(--legend);}
   .tabs {display:flex; gap:10px; margin-bottom:15px;}
   .tab-btn {background:#111; border:1px solid #444; color:#888; padding:8px 20px; cursor:pointer; transition:0.2s;}
   .tab-btn.active {background:var(--accent); color:#000; border-color:var(--accent); font-weight:bold;}
-  .tree-container {display:flex; flex-wrap:wrap; gap:15px; max-width:1000px; justify-content:center; padding-bottom: 50px;}
   
+  .tree-container {display:flex; flex-wrap:wrap; gap:15px; max-width:1000px; justify-content:center; padding-bottom: 20px;}
   .skill-node {
     width:220px; background:#0f1724; border:1px solid #333; padding:10px; border-radius:4px;
     display:flex; flex-direction:column; gap:4px; transition:0.2s; position:relative; opacity:0.6;
@@ -126,9 +156,10 @@
 
   /* STATS BOX */
   .stats-box {
-    background:rgba(15,23,36,0.9); border:1px solid #444; border-radius:8px; padding:15px;
+    background:rgba(15,23,36,0.95); border:1px solid #444; border-radius:8px; padding:15px;
     display:grid; grid-template-columns: repeat(4, 1fr); gap:10px 20px;
     font-size:0.75rem; width:80%; max-width:800px; margin-bottom:20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
   }
   .stat-item {display:flex; justify-content:space-between; border-bottom:1px solid #333; padding-bottom:2px;}
   .stat-name {color:#aaa;}
@@ -138,7 +169,6 @@
   .shop-grid {display:grid;grid-template-columns:1fr 1fr;gap:4px;}
   .tech-btn {font-size:0.75rem; display:flex; justify-content:space-between; align-items:center;}
   
-  /* Artifacts Panel */
   #artifacts {display:flex; flex-wrap:wrap; gap:6px; align-content: flex-start; overflow-y:auto; max-height:100%;}
   .artifact {
     width:32px; height:32px; background:#111; border:1px solid #444; border-radius:4px;
@@ -190,7 +220,7 @@
   .news-content { font-size: 0.9rem; line-height: 1.6; color: #ddd; }
   .news-content li { margin-bottom: 8px; }
 
-  /* DPS METER & LOG LAYOUT */
+  /* DPS METER */
   #dpsMeter {
     position:absolute; bottom:10px; left:10px; width:200px;
     background:rgba(0,0,0,0.8); border:1px solid #444; border-radius:6px;
@@ -202,7 +232,7 @@
   .dps-bar-bg {flex:1; height:6px; background:#222; border-radius:3px; overflow:hidden;}
   .dps-bar-fill {height:100%; background:var(--accent); transition:width 0.5s;}
 
-  /* LOG OVERLAY (Center-Right) */
+  /* LOG OVERLAY */
   #ingameLog {
     position:absolute; bottom:10px; 
     left: 65%; transform: translateX(-50%); 
@@ -210,7 +240,7 @@
     background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:6px;
     padding:5px 10px; pointer-events:none; font-size:0.7rem; font-family: monospace; color:#ccc;
     display:flex; flex-direction:column; justify-content:flex-end; overflow:hidden;
-    z-index: 50; pointer-events: auto;
+    z-index: 50; pointer-events: auto; text-shadow: 1px 1px 0 #000;
   }
   #logContent { overflow-y: auto; max-height: 100%; display: flex; flex-direction: column-reverse;}
   .log-entry { margin-bottom: 1px; border-left: 2px solid #555; padding-left: 5px; background: rgba(0,0,0,0.3); }
@@ -225,13 +255,15 @@
 
 <div id="newsOverlay" class="screen hidden">
     <div class="news-panel">
-        <div class="news-header">PATCH NOTES: v25.0</div>
+        <div class="news-header">PATCH NOTES: v26.0</div>
         <div class="news-content">
             <ul>
-                <li><strong>[SYSTEM] Overcrit:</strong> Critical Chance > 100% now deals Multi-Critical Damage (Yellow -> Orange -> Red).</li>
-                <li><strong>[SYSTEM] Artifact Sort:</strong> Fixed sorting to prioritize Mythics correctly.</li>
-                <li><strong>[BALANCE] Mythic Chance:</strong> Base drop rate increased to 0.4%.</li>
-                <li><strong>[UI]</strong> Visual improvements for critical hit text.</li>
+                <li><strong>[NEW] Starter Protocols:</strong> Choose from 4 random buffs at the start of each mission.</li>
+                <li><strong>[NEW] Gold Rush:</strong> Defeating a Boss grants 2x Credits for the following wave.</li>
+                <li><strong>[NEW] Monolith:</strong> Extremely tough but slow enemy spawns from halfway down the path (rare).</li>
+                <li><strong>[BALANCE] Crit System:</strong> Overcrit now scales additively instead of exponentially (nerf/fix).</li>
+                <li><strong>[VISUAL] High Visibility:</strong> Improved text shadows and UI contrast. Added red flash on damage.</li>
+                <li><strong>[SYSTEM]</strong> Reset logic improved.</li>
             </ul>
         </div>
         <button class="btn btn-big" onclick="closeNews()">ACKNOWLEDGE</button>
@@ -242,7 +274,7 @@
   <div class="header">
     <div>
       <h1 style="margin:0; text-shadow:0 0 10px var(--accent);">SYSTEM CORE // UPGRADE</h1>
-      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - VER 25.0</div>
+      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - VER 26.0</div>
     </div>
     <div class="cf-display">CORE FRAGMENTS: <span id="cfVal">0</span></div>
   </div>
@@ -270,6 +302,8 @@
 
 <div id="gameScreen" class="screen hidden">
   <div id="left">
+    <div id="flashOverlay" class="hidden"></div>
+    
     <canvas id="c"></canvas>
     
     <div id="bossHud" class="hidden">
@@ -289,6 +323,7 @@
       <div class="stat"><div class="label">CREDITS</div><div class="val" id="gold">0</div></div>
       <div class="stat"><div class="label">INTEGRITY</div><div class="val" id="life">20</div></div>
       <div class="stat"><div class="label">WAVE</div><div class="val" id="wave">0</div></div>
+      <div class="stat hidden" id="goldRushInd"><div class="label">BONUS</div><div class="val" style="color:#ffd700;font-size:0.9rem;">GOLD RUSH</div></div>
       
       <div class="stat" style="display:flex; align-items:center; gap:5px; padding:0 10px;">
           <div class="label">SPEED</div>
@@ -352,14 +387,14 @@
 </div>
 
 <script>
-/* --- DATA --- */
+/* --- DATA: SKILL TREES --- */
 const SKILL_TREES = {
   "nexus_core": {
     "name": "Nexus Core",
     "skills": [
       { id:"core_life_1", name:"Base Integrity +5", desc:"Base Integrity +5", cost:5, effects:{baseLife:5}, prerequisites:[] },
       { id:"core_gold_1", name:"Start Gold +30", desc:"Start Gold +30", cost:5, effects:{startGold:30}, prerequisites:[] },
-      { id:"core_interest_1", name:"Interest Cap +10", desc:"Interest Cap +10 (Uncapped in v19)", cost:5, effects:{interestCap:10}, prerequisites:[] },
+      { id:"core_interest_1", name:"Interest Cap +10", desc:"Legacy Upgrade (Uncapped)", cost:5, effects:{interestCap:10}, prerequisites:[] },
       { id:"core_tech_1", name:"Tech Cost -5%", desc:"Tech Cost -5%", cost:5, effects:{techDiscount:0.05}, prerequisites:[] },
       { id:"core_wave_gold", name:"Wave Gold +1", desc:"+1 Gold per wave", cost:5, effects:{waveStartGold:1}, prerequisites:[] },
       { id:"core_global_dmg", name:"Global DMG +3%", desc:"All Tower DMG +3%", cost:12, effects:{globalDmg:0.03}, prerequisites:["core_life_1"] },
@@ -430,6 +465,28 @@ const SKILL_TREES = {
   }
 };
 
+// STARTERS
+const STARTERS = [
+  {name:'HYPER BEAM', desc:'Beam Tower DMG x3', fn: g=>{ const t=TOWERS.find(x=>x.id==='beam'); t.dmg*=3; t.color='#fff'; t.unlocked=true; }},
+  {name:'TREASURE HUNTER', desc:'Mythic Chance x5 (2.0%)', fn: g=>g.perks.mythicChance=0.02},
+  {name:'FORTRESS', desc:'Start with 50 Integrity', fn: g=>{ g.maxLife=50; g.life=50; }},
+  {name:'TYCOON', desc:'Start with 400 Credits', fn: g=>g.gold=400},
+  {name:'VETERAN', desc:'Start with Lv.3 Laser', fn: g=>{ 
+      const t = new Tower(5, 5, TOWERS[0], 3);
+      g.gold += 150; g.globalMult.dmg += 0.2;
+      g.towers.push(t);
+  }},
+  {name:'SNIPER ELITE', desc:'Unlock Sniper & Range +20%', fn: g=>{ 
+      TOWERS.find(x=>x.id==='sniper').unlocked=true; g.globalMult.range+=0.2; 
+  }},
+  {name:'GAMBLER', desc:'Start Gold: 100-800', fn: g=>{ g.gold = 100 + Math.floor(Math.random()*701); }},
+  {name:'OVERCLOCK', desc:'SPD +30%, Range -10%', fn: g=>{ g.globalMult.spd+=0.3; g.globalMult.range-=0.1; }},
+  {name:'MINIMALIST', desc:'DMG +50%, Integrity = 1', fn: g=>{ g.globalMult.dmg+=0.5; g.maxLife=1; g.life=1; }},
+  {name:'ENGINEER', desc:'All Tech Costs -30%', fn: g=>{ 
+      Object.keys(g.techCost).forEach(k => g.techCost[k] = Math.floor(g.techCost[k]*0.7));
+  }}
+];
+
 /* --- SYSTEM --- */
 const GRID_W = 16, GRID_H = 10;
 let TILE, game, mousePos, selectDef, selectedTower = null;
@@ -439,7 +496,7 @@ const ctx = canvas.getContext('2d');
 let saveData = { cf: 0, unlocked: [], seenVersion: null };
 let activeTab = 'nexus_core';
 let animationId = null; 
-const CURRENT_VERSION = "25.0";
+const CURRENT_VERSION = "26.0";
 
 /* --- GAME DEFINITIONS --- */
 const RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']; 
@@ -480,7 +537,7 @@ const MYTHICS = [
 
 /* --- SAVE SYSTEM --- */
 function loadSave() {
-  const s = localStorage.getItem('hyperRogueV25');
+  const s = localStorage.getItem('hyperRogueV26');
   if(s) {
     try {
       const d = JSON.parse(s);
@@ -493,7 +550,7 @@ function loadSave() {
   checkNews();
 }
 function saveGame() {
-  localStorage.setItem('hyperRogueV25', JSON.stringify(saveData));
+  localStorage.setItem('hyperRogueV26', JSON.stringify(saveData));
   updateUpgradeUI();
 }
 
@@ -573,8 +630,9 @@ function startGameFromMenu() {
   document.getElementById('upgradeScreen').classList.add('hidden');
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
-  initGame();
-  resize(); 
+  
+  // Show starter selection
+  showStarterScreen();
 }
 function returnToMenu() {
   document.getElementById('upgradeScreen').classList.remove('hidden');
@@ -583,6 +641,7 @@ function returnToMenu() {
   document.getElementById('pauseOverlay').classList.add('hidden');
   document.getElementById('modalOverlay').classList.add('hidden');
   document.getElementById('newsOverlay').classList.add('hidden');
+  document.getElementById('flashOverlay').classList.add('hidden'); // Clear flash
   
   hideTooltip();
   updateUpgradeUI();
@@ -699,7 +758,7 @@ function resetGame() {
     globalMult: { dmg:0, range:0, spd:0, tierBonus:0 },
     perks: { 
         interest:0, crit:0, critMult:2.0, explodeDmg:0, 
-        startHpMult:1, goldPerHit:0, mythicChance: 0.004, slowMult:1, // 0.4% chance
+        startHpMult:1, goldPerHit:0, mythicChance: 0.004, slowMult:1, 
         debuffArmor:0, doubleHit:0, startBoost:0, interestCap:99999,
         cfGain:0, waveStartGold:0, blueprintChance:0.15,
         overdrive: false, midas: false
@@ -714,15 +773,52 @@ function resetGame() {
     spawnTimer: 0, spawnInterval: 0,
     waveStartTime: 0,
     dpsCurrent: {}, lastDpsUpdate: 0,
-    augments: {}
+    augments: {},
+    bossKillBonusWave: -1 // New Flag
   };
   setSpeed(1);
   document.getElementById('nextWaveBtn').disabled = false;
+  // Clear flash
+  const flash = document.getElementById('flashOverlay');
+  flash.classList.remove('flash-overlay'); 
+  void flash.offsetWidth; 
+  flash.classList.add('hidden');
 
   TOWERS.forEach(t => { game.towerCounts[t.id] = 0; game.dpsCurrent[t.id] = 0; });
   generateObstacles();
   applyPermanentUpgrades();
   renderShop(); 
+}
+
+function showStarterScreen() {
+    // Random 4 starters
+    const pool = [...STARTERS];
+    const choices = [];
+    while(choices.length < 4 && pool.length > 0) {
+        const idx = Math.floor(Math.random() * pool.length);
+        choices.push(pool[idx]);
+        pool.splice(idx, 1);
+    }
+    
+    const modal = document.getElementById('modalOverlay');
+    const container = document.getElementById('cards');
+    document.getElementById('modalTitle').innerText = "INITIALIZE PROTOCOL";
+    document.getElementById('modalSubtitle').innerText = "Select Starter Bonus";
+    container.innerHTML = '';
+    modal.classList.remove('hidden');
+
+    choices.forEach(s => {
+        const el = document.createElement('div');
+        el.className = 'card starter';
+        el.innerHTML = `<h4 style="font-size:0.9rem">${s.name}</h4><p>${s.desc}</p>`;
+        el.onclick = () => {
+            s.fn(game);
+            modal.classList.add('hidden');
+            log(`PROTOCOL ACTIVE: ${s.name}`);
+            updateHUD();
+        };
+        container.appendChild(el);
+    });
 }
 
 function applyPermanentUpgrades() {
@@ -812,15 +908,15 @@ class Particle {
 class DamageText {
   constructor(x, y, text, color='#fff', isCrit=false, critLevel=0) {
     this.x = x; this.y = y; this.text = text; this.color = color; this.isCrit = isCrit;
-    this.critLevel = critLevel;
     this.life = 1.0; this.vy = -0.01;
+    this.critLevel = critLevel;
   }
   update() { this.y += this.vy; this.life -= 0.02; }
   draw(ctx, t) {
     ctx.globalAlpha = Math.max(0, this.life);
     ctx.fillStyle = this.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
     let scale = this.isCrit ? 0.6 : 0.35;
-    if(this.critLevel >= 3) scale = 0.9; // Massive text for red crit
+    if(this.critLevel >= 3) scale = 0.9;
     ctx.font = "bold " + (t*scale) + "px sans-serif";
     ctx.strokeText(this.text, this.x*t, this.y*t);
     ctx.fillText(this.text, this.x*t, this.y*t);
@@ -828,7 +924,7 @@ class DamageText {
   }
 }
 class Enemy {
-  constructor(path, wave, type='normal') {
+  constructor(path, wave, type='normal', progressOverride=0) {
     this.path = path; this.type = type; 
     const currentWave = Math.max(1, wave); 
     let hpMult = 1.0;
@@ -847,8 +943,27 @@ class Enemy {
     if (this.type === 'elite') { this.maxHp *= 1.5; if(Math.random()<0.5) this.speed *= 1.3; else this.armor = 3; }
     if (this.type === 'phase') { this.speed *= 0.9; this.phaseCool = 0.5; }
     if (this.type === 'ghost') { this.maxHp *= 0.6; this.speed *= 1.2; }
+    
+    // NEW: MONOLITH (Starts halfway, super tough, super slow)
+    if (this.type === 'monolith') {
+        this.maxHp *= 12;
+        this.speed *= 0.2;
+        // Start at middle
+        progressOverride = Math.floor(path.length / 2);
+    }
 
-    this.hp = this.maxHp; this.progress = 0; this.alive = true; this.pos = {x:path[0].x, y:path[0].y};
+    this.hp = this.maxHp; 
+    this.progress = progressOverride; // Start position logic
+    this.alive = true; 
+    
+    // Set initial position based on progress
+    const i = Math.floor(this.progress);
+    if (i < this.path.length) {
+        this.pos = {x:path[i].x, y:path[i].y};
+    } else {
+        this.pos = {x:0, y:0};
+        this.alive = false;
+    }
   }
   update(dt) {
     if(this.regen > 0 && this.hp < this.maxHp) this.hp += this.regen * dt;
@@ -877,7 +992,11 @@ class Enemy {
     let finalDmg = Math.max(1, (amt * multiplier) - this.armor);
     this.hp -= finalDmg;
     if(srcId && game.dpsCurrent[srcId] !== undefined) game.dpsCurrent[srcId] += finalDmg;
-    if(game.perks.goldPerHit) game.gold += game.perks.goldPerHit;
+    
+    // NEW: Gold Rush (2x) or Standard
+    let goldGain = game.perks.goldPerHit;
+    if(game.bossKillBonusWave === game.wave) goldGain *= 2;
+    if(goldGain > 0) game.gold += goldGain;
     
     // Crit Color
     let color = '#fff';
@@ -890,7 +1009,15 @@ class Enemy {
     
     if(this.hp <= 0 && this.alive) {
       this.alive = false; this.killed = true; spawnParticles(this.pos.x, this.pos.y, '#ff4d4d', 5);
-      if(this.type === 'boss') grantBossReward();
+      
+      // Boss Reward
+      if(this.type === 'boss') {
+          grantBossReward();
+          // Activate Gold Rush for NEXT wave
+          game.bossKillBonusWave = game.wave + 1;
+          log("BOSS DESTROYED! GOLD RUSH ACTIVATED FOR NEXT WAVE!");
+      }
+
       if(game.perks.midas && isCrit) game.gold += 1;
       if(game.perks.debuffArmor) {
          game.enemies.forEach(e => { if(e.alive && Math.hypot(e.pos.x-this.pos.x, e.pos.y-this.pos.y) < 3.0) { e.armor = Math.max(0, e.armor - 2); spawnParticles(e.pos.x, e.pos.y, '#550055', 3); }});
@@ -935,22 +1062,25 @@ class Tower {
     let tierMult = Math.pow(1.5, effectiveTier - 1);
     let dmg = this.def.dmg * (1 + game.globalMult.dmg) * tierMult * buffs.dmg;
 
-    // Critical Logic (Overcrit)
+    // CHANGED: ADDITIVE CRITICAL (Diminishing returns)
     let isCrit = false;
     let critLevel = 0;
     let critChance = game.perks.crit;
-    let critMult = game.perks.critMult;
+    let critMult = game.perks.critMult; // Base e.g. 2.0
     
-    // Check crit chance > 1.0 (100%)
+    // Logic: If crit chance > 100%, guarantee levels. Last partial level is rolled.
     while(critChance > 0) {
         if(Math.random() < critChance) {
             isCrit = true;
             critLevel++;
-            dmg *= critMult;
-        } else {
-            break; 
         }
         critChance -= 1.0;
+    }
+
+    if(isCrit) {
+        // Multiplier: 1 + (Level * (Multiplier - 1))
+        // e.g. Mult 2.0 -> Lv1: x2, Lv2: x3, Lv3: x4 (Additive scaling)
+        dmg *= (1 + (critLevel * (critMult - 1)));
     }
 
     /* --- ROCKET: RANGE SCALING --- */
@@ -1126,10 +1256,7 @@ function triggerWave() {
 }
 
 function grantBossReward() {
-    // 1. Check for locked Blueprints first
     const lockedTowers = TOWERS.filter(t => !t.unlocked && t.id !== 'laser');
-    
-    // 50% Chance to drop Blueprint if available
     if(lockedTowers.length > 0 && Math.random() < 0.5) {
         const t = lockedTowers[Math.floor(Math.random() * lockedTowers.length)];
         t.unlocked = true;
@@ -1139,11 +1266,9 @@ function grantBossReward() {
         return;
     }
 
-    // 2. Otherwise Artifact
     let rarityIdx = 2; // Rare
     if(Math.random() < 0.3) rarityIdx = 3; 
     if(Math.random() < 0.05) rarityIdx = 4;
-    
     const type = ARTIFACT_TYPES[Math.floor(Math.random() * ARTIFACT_TYPES.length)];
     const u = { typeId: type.id, rarityIdx: rarityIdx, name: type.name, baseDesc: type.desc, fn: type.fn, val: type.val };
     log(`BOSS DEFEATED! DROP: ${type.name}`);
@@ -1153,6 +1278,13 @@ function grantBossReward() {
 function waveComplete(failed) {
   if(failed) {
       log("INTEGRITY LOST. RETRYING...");
+      
+      // Flash Red Effect
+      const flash = document.getElementById('flashOverlay');
+      flash.classList.remove('hidden');
+      flash.classList.add('flash-overlay');
+      setTimeout(() => { flash.classList.remove('flash-overlay'); flash.classList.add('hidden'); }, 500);
+
       if(game.life <= 0) { gameOver(); return; }
       alert(`WAVE FAILED. RETRYING WAVE ${game.wave}`);
       game.state = 'idle'; game.wave--; game.enemies = []; game.particles = []; game.lasers = [];
@@ -1163,23 +1295,20 @@ function waveComplete(failed) {
   // BLUEPRINT DROP CHANCE ON WAVE CLEAR
   const lockedTowers = TOWERS.filter(t => !t.unlocked && t.id !== 'laser');
   let bpChance = 0.3 + (game.perks.blueprintChance || 0);
-  let gotBlueprint = false;
   
-  if(lockedTowers.length > 0 && Math.random() < bpChance) {
-     // Pass this info to showDraftScreen via a flag, or handle it inside showDraftScreen logic
-     // Current logic is inside showDraftScreen, so we just proceed.
-  }
-
-  // Interest logic (Base 3% + Artifacts, Capped at 5% of Gold)
+  // Interest
   let interestRate = 0.03 + game.perks.interest;
   let bonus = Math.floor(game.gold * interestRate);
   let cap = Math.floor(game.gold * 0.05);
-  
   let finalInterest = Math.min(bonus, cap);
-  
   if(finalInterest > 0) { 
       game.gold += finalInterest; 
       log(`INTEREST: +${finalInterest} CR (Rate:${(interestRate*100).toFixed(1)}% Cap:5%)`); 
+  }
+
+  // Clear Gold Rush if active for current wave
+  if(game.bossKillBonusWave === game.wave) {
+      game.bossKillBonusWave = -1;
   }
 
   if(game.perks.cfGain > 0) { saveData.cf += game.perks.cfGain; log(`CF ACQUIRED: +${game.perks.cfGain}`); }
@@ -1228,6 +1357,8 @@ function update() {
                 else if (game.wave >= 8 && rand < 0.3) type = 'ghost';
                 else if (game.wave >= 12 && rand < 0.35) type = 'tank';
                 else if (game.wave >= 15 && rand < 0.4) type = 'elite';
+                // Monolith Chance (starts later)
+                else if (game.wave >= 20 && rand < 0.05) type = 'monolith';
             }
             game.enemies.push(new Enemy(game.path, game.wave, type));
             game.enemiesSpawned++;
@@ -1245,6 +1376,11 @@ function update() {
             let bounty = 6 + game.wave * 0.5;
             if(e.type === 'boss') bounty *= 5; if(e.type === 'shield') bounty *= 1.5;
             if(e.type === 'tank') bounty *= 2; if(e.type === 'elite') bounty *= 3;
+            if(e.type === 'monolith') bounty *= 10;
+            
+            // Gold Rush Bonus
+            if(game.bossKillBonusWave === game.wave) bounty *= 2;
+
             game.gold += Math.floor(bounty);
         }
       }
@@ -1318,9 +1454,15 @@ function draw() {
     if (e.type === 'ghost') color = '#ffffff';
     if (e.type === 'tank') { color = '#558855'; size = TILE*0.45; }
     if (e.type === 'elite') color = '#ffff00';
+    if (e.type === 'monolith') { color = '#333333'; size = TILE*0.6; } // BIG DARK ENEMY
+
     ctx.save(); if (e.type === 'ghost') ctx.globalAlpha = 0.4;
     ctx.fillStyle = color; ctx.beginPath(); ctx.arc(e.pos.x*TILE, e.pos.y*TILE, size, 0, Math.PI*2); ctx.fill();
     if(e.shield > 0) { ctx.strokeStyle = '#2ee6ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.pos.x*TILE, e.pos.y*TILE, size + 4, 0, Math.PI*2); ctx.stroke(); }
+    
+    // Monolith Outline
+    if(e.type === 'monolith') { ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.pos.x*TILE, e.pos.y*TILE, size, 0, Math.PI*2); ctx.stroke(); }
+
     ctx.restore();
     const hp = Math.max(0, e.hp/e.maxHp); const barY = e.pos.y*TILE-12 - (e.type==='boss'?10:0); const barX = e.pos.x*TILE-10;
     ctx.fillStyle = '#000'; ctx.fillRect(barX-1, barY-1, 22, 5); ctx.fillStyle = '#500'; ctx.fillRect(barX, barY, 20, 3); ctx.fillStyle = '#f00'; ctx.fillRect(barX, barY, 20*hp, 3);
@@ -1352,22 +1494,22 @@ function updateHUD() {
   document.getElementById('life').innerText = game.life + " / " + game.maxLife;
   document.getElementById('wave').innerText = game.wave;
   
+  // GOLD RUSH INDICATOR
+  const rushInd = document.getElementById('goldRushInd');
+  if(game.bossKillBonusWave === game.wave) rushInd.classList.remove('hidden');
+  else rushInd.classList.add('hidden');
+
   // BOSS HUD UPDATE FIX
-  // Check for any boss
   const bosses = game.enemies.filter(e => e.type === 'boss' && e.alive);
   const hud = document.getElementById('bossHud');
   if(bosses.length > 0) {
-      // Sort by progress descending (closest to goal first)
       bosses.sort((a,b) => b.progress - a.progress);
       const boss = bosses[0];
-
       hud.classList.remove('hidden');
       const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
-      
       const fill = document.getElementById('bossBarFill');
-      fill.style.width = pct + "%";
-      
       const val = document.getElementById('bossHpVal');
+      fill.style.width = pct + "%";
       val.innerText = Math.ceil(boss.hp) + " / " + Math.ceil(boss.maxHp);
   } else {
       hud.classList.add('hidden');
@@ -1415,14 +1557,12 @@ function showDraftScreen() {
     else if(r < 0.05 + (game.perks.rarityRare||0)) rarityIdx = 2; 
     else if(r < 0.25 + (game.perks.rarityUncommon||0)) rarityIdx = 1;
     
-    // Mythic Unique Check
     if(rarityIdx === 5) { 
         const availableMythics = MYTHICS.filter(m => !game.mythicHistory.includes(m.id));
         if(availableMythics.length > 0) {
             const m = availableMythics[Math.floor(Math.random() * availableMythics.length)];
             createCard(container, m, 5);
         } else {
-            // Fallback to Legendary if all mythics obtained
             rarityIdx = 4;
             const type = pool[Math.floor(Math.random()*pool.length)]; 
             const u = { typeId:type.id, rarityIdx:rarityIdx, name:type.name, baseDesc:type.desc, fn:type.fn, val:type.val }; 
@@ -1449,7 +1589,7 @@ function createCard(container, u, rarityIdx) {
         else if(rarityIdx===5) { 
             u.fn(game); 
             game.artifacts.push({...u, rarity:'mythic'}); 
-            game.mythicHistory.push(u.typeId); // Track ID
+            game.mythicHistory.push(u.typeId); 
             log(`MYTHIC: ${u.name}`); 
         } else addArtifactRecursive(u);
         document.getElementById('modalOverlay').classList.add('hidden'); renderArtifacts(); game.state = 'idle'; document.getElementById('nextWaveBtn').disabled = false;
@@ -1469,21 +1609,13 @@ function applyArtifactStats(u) { u.fn(game, u.val[u.rarityIdx]); }
 function createArtifactData(u) { return {typeId:u.typeId, rarityIdx:u.rarityIdx, rarity:RARITIES[u.rarityIdx], name:u.name, desc:u.baseDesc.replace('[X]', u.val[u.rarityIdx])}; }
 function renderArtifacts() {
   const d = document.getElementById('artifacts'); d.innerHTML = ''; 
-  // SORT: Mythic First (Priority)
-  // Logic: First group by RarityIdx descending.
-  
-  // Clone array to sort without affecting main array order too much
-  const sorted = [...game.artifacts].sort((a,b) => b.rarityIdx - a.rarityIdx);
-  
-  const grouped = {}; 
-  sorted.forEach(a=>{ 
-      const k=a.typeId+'_'+a.rarityIdx; 
-      if(!grouped[k]) grouped[k]={...a, count:0}; 
-      grouped[k].count++; 
-  });
-  
+  // SORT: Mythic First
+  game.artifacts.sort((a,b) => b.rarityIdx - a.rarityIdx);
+
+  const grouped = {}; game.artifacts.forEach(a=>{ const k=a.typeId+'_'+a.rarityIdx; if(!grouped[k]) grouped[k]={...a, count:0}; grouped[k].count++; });
   Object.values(grouped).forEach(a=>{
       const el = document.createElement('div'); el.className=`artifact ${a.rarity}`; el.innerText=a.name[0]; 
+      // Tooltip handling in JS now
       el.onmouseenter = (e) => showTooltip(e, `[${a.rarity.toUpperCase()}] ${a.name} x${a.count}\n${a.desc}`);
       el.onmouseleave = hideTooltip;
       if(a.count>1) el.innerHTML+=`<div class="artifact-count">${a.count}</div>`; d.appendChild(el);
