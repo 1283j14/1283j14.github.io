@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>Hyper Rogue TD Neo - v24 Log Position Adjustment</title>
+<title>Hyper Rogue TD Neo - v25 Overcrit</title>
 <style>
   :root{
     --bg:#050914;
@@ -202,10 +202,10 @@
   .dps-bar-bg {flex:1; height:6px; background:#222; border-radius:3px; overflow:hidden;}
   .dps-bar-fill {height:100%; background:var(--accent); transition:width 0.5s;}
 
-  /* [UPDATED] LOG OVERLAY (Center-Right, Next to DPS) */
+  /* LOG OVERLAY (Center-Right) */
   #ingameLog {
     position:absolute; bottom:10px; 
-    left: 65%; transform: translateX(-50%); /* Moved to right-center */
+    left: 65%; transform: translateX(-50%); 
     width:450px; height:60px; 
     background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:6px;
     padding:5px 10px; pointer-events:none; font-size:0.7rem; font-family: monospace; color:#ccc;
@@ -225,12 +225,13 @@
 
 <div id="newsOverlay" class="screen hidden">
     <div class="news-panel">
-        <div class="news-header">PATCH NOTES: v24.0</div>
+        <div class="news-header">PATCH NOTES: v25.0</div>
         <div class="news-content">
             <ul>
-                <li><strong>[UI] Log Position:</strong> Log window moved slightly to the right for better visibility.</li>
-                <li><strong>[UI] Layout:</strong> HUD and map layout optimized.</li>
-                <li><strong>[SYSTEM]</strong> Previous v23 updates (Blueprints every 5 waves, Mythic Sort, Boss HUD) included.</li>
+                <li><strong>[SYSTEM] Overcrit:</strong> Critical Chance > 100% now deals Multi-Critical Damage (Yellow -> Orange -> Red).</li>
+                <li><strong>[SYSTEM] Artifact Sort:</strong> Fixed sorting to prioritize Mythics correctly.</li>
+                <li><strong>[BALANCE] Mythic Chance:</strong> Base drop rate increased to 0.4%.</li>
+                <li><strong>[UI]</strong> Visual improvements for critical hit text.</li>
             </ul>
         </div>
         <button class="btn btn-big" onclick="closeNews()">ACKNOWLEDGE</button>
@@ -241,7 +242,7 @@
   <div class="header">
     <div>
       <h1 style="margin:0; text-shadow:0 0 10px var(--accent);">SYSTEM CORE // UPGRADE</h1>
-      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - VER 24.0</div>
+      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - VER 25.0</div>
     </div>
     <div class="cf-display">CORE FRAGMENTS: <span id="cfVal">0</span></div>
   </div>
@@ -438,7 +439,7 @@ const ctx = canvas.getContext('2d');
 let saveData = { cf: 0, unlocked: [], seenVersion: null };
 let activeTab = 'nexus_core';
 let animationId = null; 
-const CURRENT_VERSION = "24.0";
+const CURRENT_VERSION = "25.0";
 
 /* --- GAME DEFINITIONS --- */
 const RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']; 
@@ -479,7 +480,7 @@ const MYTHICS = [
 
 /* --- SAVE SYSTEM --- */
 function loadSave() {
-  const s = localStorage.getItem('hyperRogueV24');
+  const s = localStorage.getItem('hyperRogueV25');
   if(s) {
     try {
       const d = JSON.parse(s);
@@ -492,7 +493,7 @@ function loadSave() {
   checkNews();
 }
 function saveGame() {
-  localStorage.setItem('hyperRogueV24', JSON.stringify(saveData));
+  localStorage.setItem('hyperRogueV25', JSON.stringify(saveData));
   updateUpgradeUI();
 }
 
@@ -674,8 +675,6 @@ function showTechTooltip(type, el) {
     else if(type==='range') txt = `Range Multiplier: x${(1+game.globalMult.range).toFixed(2)}`;
     else if(type==='spd') txt = `Speed Multiplier: x${(1+game.globalMult.spd).toFixed(2)}`;
     else if(type==='life') txt = `Restore Integrity (+5)\nMax: ${game.maxLife}`;
-    
-    // Add cost
     txt += `\nNext Cost: ${game.techCost[type]} CR`;
     
     showTooltip({clientX: el.getBoundingClientRect().right, clientY: el.getBoundingClientRect().top}, txt);
@@ -700,7 +699,7 @@ function resetGame() {
     globalMult: { dmg:0, range:0, spd:0, tierBonus:0 },
     perks: { 
         interest:0, crit:0, critMult:2.0, explodeDmg:0, 
-        startHpMult:1, goldPerHit:0, mythicChance: 0.003, slowMult:1,
+        startHpMult:1, goldPerHit:0, mythicChance: 0.004, slowMult:1, // 0.4% chance
         debuffArmor:0, doubleHit:0, startBoost:0, interestCap:99999,
         cfGain:0, waveStartGold:0, blueprintChance:0.15,
         overdrive: false, midas: false
@@ -811,15 +810,17 @@ class Particle {
   }
 }
 class DamageText {
-  constructor(x, y, text, color='#fff', isCrit=false) {
+  constructor(x, y, text, color='#fff', isCrit=false, critLevel=0) {
     this.x = x; this.y = y; this.text = text; this.color = color; this.isCrit = isCrit;
+    this.critLevel = critLevel;
     this.life = 1.0; this.vy = -0.01;
   }
   update() { this.y += this.vy; this.life -= 0.02; }
   draw(ctx, t) {
     ctx.globalAlpha = Math.max(0, this.life);
     ctx.fillStyle = this.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
-    const scale = this.isCrit ? 0.6 : 0.35;
+    let scale = this.isCrit ? 0.6 : 0.35;
+    if(this.critLevel >= 3) scale = 0.9; // Massive text for red crit
     ctx.font = "bold " + (t*scale) + "px sans-serif";
     ctx.strokeText(this.text, this.x*t, this.y*t);
     ctx.fillText(this.text, this.x*t, this.y*t);
@@ -863,7 +864,7 @@ class Enemy {
     this.pos.x = this.path[i].x + (this.path[i+1].x - this.path[i].x)*t + 0.5;
     this.pos.y = this.path[i].y + (this.path[i+1].y - this.path[i].y)*t + 0.5;
   }
-  takeDmg(amt, isCrit=false, srcId='unknown') {
+  takeDmg(amt, isCrit=false, srcId='unknown', critLevel=0) {
     if(game.perks.overdrive && Math.random() < 0.25) { game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y - 0.5, "MISS", "#aaa")); return; }
     if (this.type === 'ghost') {
         const tDef = TOWERS.find(t=>t.id===srcId);
@@ -878,8 +879,14 @@ class Enemy {
     if(srcId && game.dpsCurrent[srcId] !== undefined) game.dpsCurrent[srcId] += finalDmg;
     if(game.perks.goldPerHit) game.gold += game.perks.goldPerHit;
     
-    const color = isCrit ? '#ffd700' : '#fff';
-    game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y - 0.5, Math.floor(finalDmg), color, isCrit));
+    // Crit Color
+    let color = '#fff';
+    if(isCrit) {
+        if(critLevel === 1) color = '#ffd700'; // Yellow
+        else if(critLevel === 2) color = '#ff8c00'; // Orange
+        else if(critLevel >= 3) color = '#ff0000'; // Red
+    }
+    game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y - 0.5, Math.floor(finalDmg), color, isCrit, critLevel));
     
     if(this.hp <= 0 && this.alive) {
       this.alive = false; this.killed = true; spawnParticles(this.pos.x, this.pos.y, '#ff4d4d', 5);
@@ -927,8 +934,24 @@ class Tower {
     let effectiveTier = this.tier + (game.globalMult.tierBonus || 0);
     let tierMult = Math.pow(1.5, effectiveTier - 1);
     let dmg = this.def.dmg * (1 + game.globalMult.dmg) * tierMult * buffs.dmg;
+
+    // Critical Logic (Overcrit)
     let isCrit = false;
-    if(Math.random() < game.perks.crit) { dmg *= (game.perks.critMult); isCrit = true; }
+    let critLevel = 0;
+    let critChance = game.perks.crit;
+    let critMult = game.perks.critMult;
+    
+    // Check crit chance > 1.0 (100%)
+    while(critChance > 0) {
+        if(Math.random() < critChance) {
+            isCrit = true;
+            critLevel++;
+            dmg *= critMult;
+        } else {
+            break; 
+        }
+        critChance -= 1.0;
+    }
 
     /* --- ROCKET: RANGE SCALING --- */
     if (this.def.id === 'rocket') {
@@ -955,7 +978,7 @@ class Tower {
                 const chargeMult = 3.0 + (this.tier * 0.5); 
                 let finalDmg = dmg * chargeMult;
                 if(game.augments.sniperMaxHpDmg) finalDmg += target.maxHp * game.augments.sniperMaxHpDmg;
-                this.applyHit(target, finalDmg, isCrit);
+                this.applyHit(target, finalDmg, isCrit, critLevel);
                 
                 game.lasers.push({
                     x1:this.x+0.5, y1:this.y+0.5, x2:target.pos.x, y2:target.pos.y,
@@ -991,7 +1014,7 @@ class Tower {
              }
              if(game.augments.laserMark && this.def.id==='laser') e.debuffs.mark = (e.debuffs.mark||0) + 0.15;
              if(game.augments.beamIgnoreArmor && this.def.id==='beam') { e.armor = 0; e.shield = 0; }
-             this.applyHit(e, finalDmg, isCrit);
+             this.applyHit(e, finalDmg, isCrit, critLevel);
            });
            let width = isCrit ? 4 : 2;
            if(this.def.id==='laser' && game.augments.laserWidth) width *= 1.5;
@@ -1024,25 +1047,25 @@ class Tower {
                       finalDmg = dmg * (1.0 + prox); 
                       if(game.augments.blasterSlow) e.debuffs.slow = 0.1;
                   }
-                  this.applyHit(e, finalDmg, isCrit);
+                  this.applyHit(e, finalDmg, isCrit, critLevel);
               }
             });
             spawnParticles(target.pos.x, target.pos.y, this.def.color, 8);
           } else {
-            this.applyHit(target, dmg, isCrit);
+            this.applyHit(target, dmg, isCrit, critLevel);
             if(isCrit) spawnParticles(target.pos.x, target.pos.y, '#fff', 4);
           }
           game.lasers.push({ x1:this.x+0.5, y1:this.y+0.5, x2:target.pos.x, y2:target.pos.y, color: isCrit ? '#fff' : this.def.color, width: isCrit ? 4 : 2, life:5 });
-          if(this.def.id==='rocket' && game.augments.rocketSplit) { if(targets.length > 1) this.applyHit(targets[1], dmg*0.5, isCrit); }
+          if(this.def.id==='rocket' && game.augments.rocketSplit) { if(targets.length > 1) this.applyHit(targets[1], dmg*0.5, isCrit, critLevel); }
           this.cool = fireRate;
         }
       }
     }
   }
-  applyHit(e, dmg, isCrit) {
-      e.takeDmg(dmg, isCrit, this.def.id);
+  applyHit(e, dmg, isCrit, critLevel=0) {
+      e.takeDmg(dmg, isCrit, this.def.id, critLevel);
       spawnParticles(e.pos.x, e.pos.y, '#fff', 4);
-      if(game.perks.doubleHit > 0 && Math.random() < game.perks.doubleHit) { setTimeout(() => { if(e.alive) { e.takeDmg(dmg, isCrit, this.def.id); spawnParticles(e.pos.x, e.pos.y, '#00ffff', 4); }}, 100); }
+      if(game.perks.doubleHit > 0 && Math.random() < game.perks.doubleHit) { setTimeout(() => { if(e.alive) { e.takeDmg(dmg, isCrit, this.def.id, critLevel); spawnParticles(e.pos.x, e.pos.y, '#00ffff', 4); }}, 100); }
   }
   getLineTargets(enemies, range, angle, maxHits) {
     const hits = []; const tx = this.x+0.5, ty = this.y+0.5; const dx = Math.cos(angle), dy = Math.sin(angle);
@@ -1137,7 +1160,7 @@ function waveComplete(failed) {
       updateHUD(); return;
   }
   
-  // ADDED: BLUEPRINT DROP CHANCE ON WAVE CLEAR
+  // BLUEPRINT DROP CHANCE ON WAVE CLEAR
   const lockedTowers = TOWERS.filter(t => !t.unlocked && t.id !== 'laser');
   let bpChance = 0.3 + (game.perks.blueprintChance || 0);
   let gotBlueprint = false;
@@ -1147,7 +1170,7 @@ function waveComplete(failed) {
      // Current logic is inside showDraftScreen, so we just proceed.
   }
 
-  // CHANGED: Interest logic (Base 3% + Artifacts, Capped at 5% of Gold)
+  // Interest logic (Base 3% + Artifacts, Capped at 5% of Gold)
   let interestRate = 0.03 + game.perks.interest;
   let bonus = Math.floor(game.gold * interestRate);
   let cap = Math.floor(game.gold * 0.05);
@@ -1337,13 +1360,14 @@ function updateHUD() {
       // Sort by progress descending (closest to goal first)
       bosses.sort((a,b) => b.progress - a.progress);
       const boss = bosses[0];
+
       hud.classList.remove('hidden');
       const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
-      const fill = document.getElementById('bossBarFill');
-      const val = document.getElementById('bossHpVal');
       
-      // Force update styles
+      const fill = document.getElementById('bossBarFill');
       fill.style.width = pct + "%";
+      
+      const val = document.getElementById('bossHpVal');
       val.innerText = Math.ceil(boss.hp) + " / " + Math.ceil(boss.maxHp);
   } else {
       hud.classList.add('hidden');
@@ -1445,13 +1469,21 @@ function applyArtifactStats(u) { u.fn(game, u.val[u.rarityIdx]); }
 function createArtifactData(u) { return {typeId:u.typeId, rarityIdx:u.rarityIdx, rarity:RARITIES[u.rarityIdx], name:u.name, desc:u.baseDesc.replace('[X]', u.val[u.rarityIdx])}; }
 function renderArtifacts() {
   const d = document.getElementById('artifacts'); d.innerHTML = ''; 
-  // SORT: Mythic First
-  game.artifacts.sort((a,b) => b.rarityIdx - a.rarityIdx);
-
-  const grouped = {}; game.artifacts.forEach(a=>{ const k=a.typeId+'_'+a.rarityIdx; if(!grouped[k]) grouped[k]={...a, count:0}; grouped[k].count++; });
+  // SORT: Mythic First (Priority)
+  // Logic: First group by RarityIdx descending.
+  
+  // Clone array to sort without affecting main array order too much
+  const sorted = [...game.artifacts].sort((a,b) => b.rarityIdx - a.rarityIdx);
+  
+  const grouped = {}; 
+  sorted.forEach(a=>{ 
+      const k=a.typeId+'_'+a.rarityIdx; 
+      if(!grouped[k]) grouped[k]={...a, count:0}; 
+      grouped[k].count++; 
+  });
+  
   Object.values(grouped).forEach(a=>{
       const el = document.createElement('div'); el.className=`artifact ${a.rarity}`; el.innerText=a.name[0]; 
-      // Tooltip handling in JS now
       el.onmouseenter = (e) => showTooltip(e, `[${a.rarity.toUpperCase()}] ${a.name} x${a.count}\n${a.desc}`);
       el.onmouseleave = hideTooltip;
       if(a.count>1) el.innerHTML+=`<div class="artifact-count">${a.count}</div>`; d.appendChild(el);
@@ -1537,7 +1569,6 @@ canvas.addEventListener('click', () => {
 });
 window.addEventListener('keydown', e => { 
     if(e.code==='Escape') {
-        // Cancel build or select only
         if(selectDef || selectedTower) { selectDef = null; selectedTower = null; renderShop(); }
     }
     if(e.code==='Enter' && !document.getElementById('gameScreen').classList.contains('hidden') && !game.paused) triggerWave(); 
