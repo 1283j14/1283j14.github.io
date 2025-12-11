@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>Hyper Rogue TD Neo - v26 Reborn</title>
+<title>Hyper Rogue TD Neo - v27 Visuals & Fixes</title>
 <style>
   :root{
     --bg:#050914;
@@ -11,7 +11,7 @@
     --rare:#2e8cff; --epic:#a335ee; --legend:#ffaa00;
     --mythic:#ff0055; --danger:#ff4d4d;
     --text-main:#eaf6ff;
-    --text-shadow: 2px 2px 0px #000; /* Enhanced visibility */
+    --shadow-text: 2px 2px 0px rgba(0,0,0,0.8);
   }
   html,body{height:100%;margin:0;font-family:'Courier New', sans-serif;background:var(--bg);color:var(--text-main);overflow:hidden;user-select:none;}
   
@@ -23,17 +23,6 @@
   }
   .hidden {display:none !important;}
 
-  /* ANIMATIONS */
-  @keyframes flashRed {
-    0% { background: rgba(255, 0, 0, 0.5); }
-    100% { background: transparent; }
-  }
-  .flash-overlay {
-    position: absolute; top:0; left:0; width:100%; height:100%;
-    pointer-events: none; z-index: 9999;
-    animation: flashRed 0.5s ease-out forwards;
-  }
-
   /* GAME SCREEN */
   #gameScreen {
     display:flex; flex-direction:row;
@@ -41,23 +30,24 @@
     position:relative;
   }
 
-  /* LEFT SIDE (MAP) */
+  /* LEFT SIDE (MAP & OVERLAYS) */
   #left {
-    flex:1; display:flex; flex-direction:column; gap:8px; position:relative;
-    height: 100%;
+    flex:1; display:flex; flex-direction:column; gap:0; position:relative;
+    height: 100%; border-radius:8px; overflow: hidden;
+    box-shadow:inset 0 0 20px rgba(0,0,0,0.8);
   }
   canvas {
-    background:#070b1a; border-radius:8px; display:block; width:100%; height:100%;
-    cursor:crosshair; box-shadow:inset 0 0 30px rgba(0,0,0,0.9);
+    background:#070b1a; display:block; width:100%; height:100%;
+    cursor:crosshair;
   }
 
-  /* RIGHT SIDE (PANEL) */
+  /* RIGHT SIDE (PANELS) */
   #right {
     width:360px; display:flex; flex-direction:column; gap:8px; z-index:5;
     height: 100%;
   }
   .panel{
-    background:rgba(12, 18, 28, 0.98); padding:10px; border-radius:6px; border:1px solid #23344a;
+    background:rgba(12, 18, 28, 0.95); padding:10px; border-radius:6px; border:1px solid #23344a;
     display:flex; flex-direction:column; gap:5px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
@@ -65,17 +55,13 @@
 
   /* --- UI COMPONENTS --- */
   h3{
-      margin:0 0 5px 0; font-size:0.9rem; color:var(--accent); 
+      margin:0 0 5px 0; font-size:0.85rem; color:var(--accent); 
       border-bottom:1px solid #23344a; padding-bottom:5px; 
-      display:flex; justify-content:space-between; text-shadow: var(--text-shadow);
+      display:flex; justify-content:space-between; text-shadow: 1px 1px 0 #000;
   }
   
-  .btn {
-      background:linear-gradient(180deg, #1a273a, #0f1724); border:1px solid var(--accent); color:var(--accent);
-      padding:8px; cursor:pointer; border-radius:4px; transition:0.2s; font-weight:bold; font-family:inherit;
-      text-shadow: 1px 1px 0 #000;
-  }
-  .btn:hover {background:var(--accent); color:#000; box-shadow:0 0 10px var(--accent); text-shadow: none;}
+  .btn {background:linear-gradient(180deg, #1a273a, #0f1724);border:1px solid var(--accent);color:var(--accent);padding:8px;cursor:pointer;border-radius:4px;transition:0.2s;font-weight:bold;font-family:inherit; text-shadow: 1px 1px 0 #000;}
+  .btn:hover {background:var(--accent);color:#000;box-shadow:0 0 10px var(--accent); text-shadow: none;}
   .btn:disabled {border-color:#555;color:#555;pointer-events:none;background:#111;}
   
   .btn-big {padding:15px 40px; font-size:1.2rem; margin-top:30px; margin-bottom: 50px;}
@@ -87,21 +73,11 @@
     position:absolute; top:10px; left:10px; right:10px; height:40px;
     display:flex; gap:15px; pointer-events:none; z-index: 100;
   }
-  .stat {
-      background:rgba(10, 15, 25, 0.95); padding:5px 15px; border-radius:4px; 
-      border:1px solid rgba(46,230,255,0.3); backdrop-filter:blur(4px); 
-      pointer-events:auto; height: 100%; box-sizing: border-box;
-      display: flex; flex-direction: column; justify-content: center;
-  }
-  .label {font-size:0.65rem; color:var(--accent); opacity:1.0; letter-spacing:1px; text-shadow: 1px 1px 0 #000;}
-  .val {font-size:1.2rem; font-weight:bold; color:#fff; text-shadow: 2px 2px 0 #000;}
+  .stat {background:rgba(15,23,36,0.9);padding:5px 15px;border-radius:4px;border:1px solid rgba(46,230,255,0.3);backdrop-filter:blur(4px);pointer-events:auto; height: 100%; box-sizing: border-box;}
+  .label {font-size:0.6rem;color:var(--accent);opacity:0.8;letter-spacing:1px; text-shadow: 1px 1px 0 #000;}
+  .val {font-size:1.1rem;font-weight:bold;color:#fff; text-shadow: 2px 2px 0 #000;}
   .controls {pointer-events:auto; display:flex; gap:10px; align-items:center;}
   
-  /* GOLD RUSH INDICATOR */
-  .gold-rush { border-color: #ffd700 !important; box-shadow: 0 0 10px #ffd700; animation: pulseGold 1s infinite alternate; }
-  .gold-rush .label { color: #ffd700; }
-  @keyframes pulseGold { 0% { box-shadow: 0 0 5px #ffd700; } 100% { box-shadow: 0 0 15px #ffd700; } }
-
   .speed-ctrl { display:flex; gap:2px; background:#000; border-radius:4px; overflow:hidden; border:1px solid #444; }
   .spd-btn { background:#111; color:#888; border:none; padding:5px 10px; font-size:0.8rem; cursor:pointer; font-weight:bold; }
   .spd-btn.active { background:var(--accent); color:#000; }
@@ -109,19 +85,22 @@
   /* OVERLAYS */
   #pauseOverlay, #modalOverlay, #newsOverlay {
     position:absolute; top:0; left:0; width:100%; height:100%;
-    background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); z-index:50;
+    background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); z-index:150;
     display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px;
   }
+  /* Z-Index Fix for Modal over other elements */
+  #modalOverlay { z-index: 2000; }
+
   .pause-title {font-size:3rem; color:var(--accent); letter-spacing:5px; text-shadow:0 0 15px var(--accent);}
 
   /* BOSS HUD */
   #bossHud {
     position:absolute; top:60px; left:50%; transform:translateX(-50%); width:70%;
     z-index:90; display:flex; flex-direction:column; align-items:center; pointer-events:none;
-    text-shadow:0 0 5px #000; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; border: 1px solid var(--danger);
+    text-shadow:0 0 5px #000; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; border: 1px solid var(--danger);
   }
   .boss-warning { font-size: 1.0rem; color: var(--danger); font-weight: bold; letter-spacing: 3px; animation: blink 1s infinite; margin-bottom: 5px; }
-  .boss-bar-bg {width:100%; height:16px; background:#200; border:1px solid #500; border-radius:4px; overflow:hidden; position:relative;}
+  .boss-bar-bg {width:100%; height:16px; background:#300; border:1px solid #500; border-radius:4px; overflow:hidden; position:relative;}
   .boss-bar-fill {height:100%; background:linear-gradient(90deg, #f00, #a00); width:0%; transition:width 0.1s;}
   .boss-val {font-size:0.9rem; color:#fff; margin-top:2px; font-weight: bold;}
   @keyframes blink { 50% { opacity: 0.5; } }
@@ -133,8 +112,8 @@
   .tabs {display:flex; gap:10px; margin-bottom:15px;}
   .tab-btn {background:#111; border:1px solid #444; color:#888; padding:8px 20px; cursor:pointer; transition:0.2s;}
   .tab-btn.active {background:var(--accent); color:#000; border-color:var(--accent); font-weight:bold;}
+  .tree-container {display:flex; flex-wrap:wrap; gap:15px; max-width:1000px; justify-content:center; padding-bottom: 100px;}
   
-  .tree-container {display:flex; flex-wrap:wrap; gap:15px; max-width:1000px; justify-content:center; padding-bottom: 20px;}
   .skill-node {
     width:220px; background:#0f1724; border:1px solid #333; padding:10px; border-radius:4px;
     display:flex; flex-direction:column; gap:4px; transition:0.2s; position:relative; opacity:0.6;
@@ -156,7 +135,7 @@
 
   /* STATS BOX */
   .stats-box {
-    background:rgba(15,23,36,0.95); border:1px solid #444; border-radius:8px; padding:15px;
+    background:rgba(15,23,36,0.9); border:1px solid #444; border-radius:8px; padding:15px;
     display:grid; grid-template-columns: repeat(4, 1fr); gap:10px 20px;
     font-size:0.75rem; width:80%; max-width:800px; margin-bottom:20px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
@@ -169,12 +148,14 @@
   .shop-grid {display:grid;grid-template-columns:1fr 1fr;gap:4px;}
   .tech-btn {font-size:0.75rem; display:flex; justify-content:space-between; align-items:center;}
   
+  /* Artifacts Panel */
   #artifacts {display:flex; flex-wrap:wrap; gap:6px; align-content: flex-start; overflow-y:auto; max-height:100%;}
   .artifact {
     width:32px; height:32px; background:#111; border:1px solid #444; border-radius:4px;
-    display:flex; align-items:center; justify-content:center; font-size:10px; cursor:help;
+    display:flex; align-items:center; justify-content:center; font-size:10px; cursor:pointer;
     position:relative; transition:0.3s; font-weight: bold;
   }
+  .artifact:hover { border-color: #fff; box-shadow: 0 0 5px #fff; }
   .artifact-count {position: absolute; bottom: -5px; right: -5px; background: #000; color: #fff; font-size: 8px; padding: 1px 3px; border-radius: 4px; border: 1px solid #555; pointer-events: none;}
   
   /* GLOBAL TOOLTIP */
@@ -194,21 +175,42 @@
   }
   #secretCode:hover, #secretCode:focus { opacity: 1.0; color: var(--accent); border-color: var(--accent); }
 
-  .common { border-color: var(--common); color: var(--common); }
-  .uncommon { border-color: var(--uncommon); color: var(--uncommon); box-shadow: 0 0 2px var(--uncommon); }
-  .rare { border-color: var(--rare); color: var(--rare); box-shadow: 0 0 4px var(--rare); }
-  .epic { border-color: var(--epic); color: var(--epic); box-shadow: 0 0 6px var(--epic); }
-  .legendary { border-color: var(--legend); color: var(--legend); box-shadow: 0 0 8px var(--legend); animation: pulseLeg 2s infinite; }
-  .mythic { border-color: var(--mythic); color: var(--mythic); box-shadow: 0 0 10px var(--mythic); animation: pulseMy 1.5s infinite; }
-  @keyframes pulseLeg {0%{box-shadow:0 0 5px var(--legend);} 50%{box-shadow:0 0 15px var(--legend);} 100%{box-shadow:0 0 5px var(--legend);}}
-  @keyframes pulseMy {0%{box-shadow:0 0 5px var(--mythic);} 50%{box-shadow:0 0 20px var(--mythic);} 100%{box-shadow:0 0 5px var(--mythic);}}
-
+  /* CARDS & RARITIES */
   .card-container {display:flex;gap:15px;margin-top:20px;flex-wrap:wrap;justify-content:center;max-width: 90%; max-height: 80vh; overflow-y: auto;}
-  .card {width:180px;background:#141e30;border:1px solid #444;padding:15px;border-radius:8px;cursor:pointer;transition:0.3s;position:relative;overflow:hidden; display:flex; flex-direction:column; justify-content:space-between;}
-  .card:hover {transform:translateY(-10px);box-shadow:0 0 20px rgba(46,230,255,0.4);border-color:var(--accent);}
-  .card h4 {margin:0 0 8px 0;color:var(--accent);font-size:0.9rem;}
-  .card p {font-size:0.75rem;color:#ccc;line-height:1.4;}
-  .card.starter {border-color: #fff; height: 160px; width: 150px;}
+  .card {
+      width:180px; padding:15px; border-radius:8px; cursor:pointer; transition:0.3s; 
+      display:flex; flex-direction:column; justify-content:space-between;
+      position:relative; overflow:hidden; border: 2px solid #444; background: #111;
+  }
+  .card:hover { transform:translateY(-10px); box-shadow:0 0 25px rgba(255,255,255,0.2); }
+  .card h4 {margin:0 0 8px 0; color:#fff; font-size:0.95rem; text-shadow: 1px 1px 2px #000;}
+  .card p {font-size:0.75rem; color:#ddd; line-height:1.4; text-shadow: 1px 1px 1px #000;}
+
+  /* Rarity Styles (Backgrounds & Borders) */
+  .common { border-color: var(--common); color: var(--common); }
+  .card.common { background: linear-gradient(135deg, #222, #333); }
+  
+  .uncommon { border-color: var(--uncommon); color: var(--uncommon); box-shadow: 0 0 2px var(--uncommon); }
+  .card.uncommon { background: linear-gradient(135deg, #0a1f0a, #143314); border-color: var(--uncommon); }
+
+  .rare { border-color: var(--rare); color: var(--rare); box-shadow: 0 0 4px var(--rare); }
+  .card.rare { background: linear-gradient(135deg, #0a0a2e, #14144d); border-color: var(--rare); }
+
+  .epic { border-color: var(--epic); color: var(--epic); box-shadow: 0 0 6px var(--epic); }
+  .card.epic { background: linear-gradient(135deg, #1f0a2e, #33144d); border-color: var(--epic); }
+
+  .legendary { border-color: var(--legend); color: var(--legend); box-shadow: 0 0 8px var(--legend); animation: pulseLeg 2s infinite; }
+  .card.legendary { background: linear-gradient(135deg, #2e1f0a, #4d3314); border-color: var(--legend); }
+
+  .mythic { border-color: var(--mythic); color: var(--mythic); box-shadow: 0 0 10px var(--mythic); animation: pulseMy 1.5s infinite; }
+  .card.mythic { background: linear-gradient(135deg, #2e0a14, #4d1429); border-color: var(--mythic); }
+
+  .card.starter { border-color: #fff; background: linear-gradient(135deg, #111, #222); height: 160px; width: 150px; }
+  .card.starter:hover { border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
+
+  @keyframes pulseLeg {0%{box-shadow:0 0 5px var(--legend);} 50%{box-shadow:0 0 20px var(--legend);} 100%{box-shadow:0 0 5px var(--legend);}}
+  @keyframes pulseMy {0%{box-shadow:0 0 5px var(--mythic);} 50%{box-shadow:0 0 25px var(--mythic);} 100%{box-shadow:0 0 5px var(--mythic);}}
+
 
   /* NEWS PANEL */
   .news-panel {
@@ -220,7 +222,7 @@
   .news-content { font-size: 0.9rem; line-height: 1.6; color: #ddd; }
   .news-content li { margin-bottom: 8px; }
 
-  /* DPS METER */
+  /* DPS METER & LOG LAYOUT */
   #dpsMeter {
     position:absolute; bottom:10px; left:10px; width:200px;
     background:rgba(0,0,0,0.8); border:1px solid #444; border-radius:6px;
@@ -232,7 +234,7 @@
   .dps-bar-bg {flex:1; height:6px; background:#222; border-radius:3px; overflow:hidden;}
   .dps-bar-fill {height:100%; background:var(--accent); transition:width 0.5s;}
 
-  /* LOG OVERLAY */
+  /* LOG OVERLAY (Center-Right) */
   #ingameLog {
     position:absolute; bottom:10px; 
     left: 65%; transform: translateX(-50%); 
@@ -240,7 +242,7 @@
     background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:6px;
     padding:5px 10px; pointer-events:none; font-size:0.7rem; font-family: monospace; color:#ccc;
     display:flex; flex-direction:column; justify-content:flex-end; overflow:hidden;
-    z-index: 50; pointer-events: auto; text-shadow: 1px 1px 0 #000;
+    z-index: 50; pointer-events: auto;
   }
   #logContent { overflow-y: auto; max-height: 100%; display: flex; flex-direction: column-reverse;}
   .log-entry { margin-bottom: 1px; border-left: 2px solid #555; padding-left: 5px; background: rgba(0,0,0,0.3); }
@@ -255,15 +257,13 @@
 
 <div id="newsOverlay" class="screen hidden">
     <div class="news-panel">
-        <div class="news-header">PATCH NOTES: v26.0</div>
+        <div class="news-header">PATCH NOTES: v27.0</div>
         <div class="news-content">
             <ul>
-                <li><strong>[NEW] Starter Protocols:</strong> Choose from 4 random buffs at the start of each mission.</li>
-                <li><strong>[NEW] Gold Rush:</strong> Defeating a Boss grants 2x Credits for the following wave.</li>
-                <li><strong>[NEW] Monolith:</strong> Extremely tough but slow enemy spawns from halfway down the path (rare).</li>
-                <li><strong>[BALANCE] Crit System:</strong> Overcrit now scales additively instead of exponentially (nerf/fix).</li>
-                <li><strong>[VISUAL] High Visibility:</strong> Improved text shadows and UI contrast. Added red flash on damage.</li>
-                <li><strong>[SYSTEM]</strong> Reset logic improved.</li>
+                <li><strong>[FIX] Starter Protocols:</strong> Fixed an issue where the game could not be started from the selection screen.</li>
+                <li><strong>[VISUAL] Draft Cards:</strong> Added rarity-based backgrounds for better visibility.</li>
+                <li><strong>[VISUAL] Tooltips:</strong> Removed the "?" cursor and fixed double tooltip issues.</li>
+                <li><strong>[SYSTEM] News Tab:</strong> Added a NEWS button to the upgrade screen to review patch notes.</li>
             </ul>
         </div>
         <button class="btn btn-big" onclick="closeNews()">ACKNOWLEDGE</button>
@@ -274,7 +274,7 @@
   <div class="header">
     <div>
       <h1 style="margin:0; text-shadow:0 0 10px var(--accent);">SYSTEM CORE // UPGRADE</h1>
-      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - VER 26.0</div>
+      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - VER 27.0</div>
     </div>
     <div class="cf-display">CORE FRAGMENTS: <span id="cfVal">0</span></div>
   </div>
@@ -284,6 +284,7 @@
     <button class="tab-btn" onclick="switchTab('artifact_mastery')">ARTIFACTS</button>
     <button class="tab-btn" onclick="switchTab('weapon_system')">WEAPONS</button>
     <button class="tab-btn" onclick="switchTab('paradox')">PARADOX</button>
+    <button class="tab-btn" onclick="openNews()">NEWS</button>
   </div>
 
   <div id="treeView" class="tree-container"></div>
@@ -302,8 +303,6 @@
 
 <div id="gameScreen" class="screen hidden">
   <div id="left">
-    <div id="flashOverlay" class="hidden"></div>
-    
     <canvas id="c"></canvas>
     
     <div id="bossHud" class="hidden">
@@ -323,7 +322,6 @@
       <div class="stat"><div class="label">CREDITS</div><div class="val" id="gold">0</div></div>
       <div class="stat"><div class="label">INTEGRITY</div><div class="val" id="life">20</div></div>
       <div class="stat"><div class="label">WAVE</div><div class="val" id="wave">0</div></div>
-      <div class="stat hidden" id="goldRushInd"><div class="label">BONUS</div><div class="val" style="color:#ffd700;font-size:0.9rem;">GOLD RUSH</div></div>
       
       <div class="stat" style="display:flex; align-items:center; gap:5px; padding:0 10px;">
           <div class="label">SPEED</div>
@@ -387,14 +385,14 @@
 </div>
 
 <script>
-/* --- DATA: SKILL TREES --- */
+/* --- DATA --- */
 const SKILL_TREES = {
   "nexus_core": {
     "name": "Nexus Core",
     "skills": [
       { id:"core_life_1", name:"Base Integrity +5", desc:"Base Integrity +5", cost:5, effects:{baseLife:5}, prerequisites:[] },
       { id:"core_gold_1", name:"Start Gold +30", desc:"Start Gold +30", cost:5, effects:{startGold:30}, prerequisites:[] },
-      { id:"core_interest_1", name:"Interest Cap +10", desc:"Legacy Upgrade (Uncapped)", cost:5, effects:{interestCap:10}, prerequisites:[] },
+      { id:"core_interest_1", name:"Interest Cap +10", desc:"Interest Cap +10 (Uncapped in v19)", cost:5, effects:{interestCap:10}, prerequisites:[] },
       { id:"core_tech_1", name:"Tech Cost -5%", desc:"Tech Cost -5%", cost:5, effects:{techDiscount:0.05}, prerequisites:[] },
       { id:"core_wave_gold", name:"Wave Gold +1", desc:"+1 Gold per wave", cost:5, effects:{waveStartGold:1}, prerequisites:[] },
       { id:"core_global_dmg", name:"Global DMG +3%", desc:"All Tower DMG +3%", cost:12, effects:{globalDmg:0.03}, prerequisites:["core_life_1"] },
@@ -496,7 +494,7 @@ const ctx = canvas.getContext('2d');
 let saveData = { cf: 0, unlocked: [], seenVersion: null };
 let activeTab = 'nexus_core';
 let animationId = null; 
-const CURRENT_VERSION = "26.0";
+const CURRENT_VERSION = "27.0";
 
 /* --- GAME DEFINITIONS --- */
 const RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic']; 
@@ -537,7 +535,7 @@ const MYTHICS = [
 
 /* --- SAVE SYSTEM --- */
 function loadSave() {
-  const s = localStorage.getItem('hyperRogueV26');
+  const s = localStorage.getItem('hyperRogueV27');
   if(s) {
     try {
       const d = JSON.parse(s);
@@ -550,7 +548,7 @@ function loadSave() {
   checkNews();
 }
 function saveGame() {
-  localStorage.setItem('hyperRogueV26', JSON.stringify(saveData));
+  localStorage.setItem('hyperRogueV27', JSON.stringify(saveData));
   updateUpgradeUI();
 }
 
@@ -574,6 +572,9 @@ function checkNews() {
     if(saveData.seenVersion !== CURRENT_VERSION) {
         document.getElementById('newsOverlay').classList.remove('hidden');
     }
+}
+function openNews() {
+    document.getElementById('newsOverlay').classList.remove('hidden');
 }
 function closeNews() {
     document.getElementById('newsOverlay').classList.add('hidden');
@@ -631,7 +632,11 @@ function startGameFromMenu() {
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
   
-  // Show starter selection
+  // Initialize game variables FIRST
+  initGame();
+  resize(); 
+
+  // Then show starter selection (game is paused/ready)
   showStarterScreen();
 }
 function returnToMenu() {
@@ -641,7 +646,6 @@ function returnToMenu() {
   document.getElementById('pauseOverlay').classList.add('hidden');
   document.getElementById('modalOverlay').classList.add('hidden');
   document.getElementById('newsOverlay').classList.add('hidden');
-  document.getElementById('flashOverlay').classList.add('hidden'); // Clear flash
   
   hideTooltip();
   updateUpgradeUI();
@@ -734,6 +738,8 @@ function showTechTooltip(type, el) {
     else if(type==='range') txt = `Range Multiplier: x${(1+game.globalMult.range).toFixed(2)}`;
     else if(type==='spd') txt = `Speed Multiplier: x${(1+game.globalMult.spd).toFixed(2)}`;
     else if(type==='life') txt = `Restore Integrity (+5)\nMax: ${game.maxLife}`;
+    
+    // Add cost
     txt += `\nNext Cost: ${game.techCost[type]} CR`;
     
     showTooltip({clientX: el.getBoundingClientRect().right, clientY: el.getBoundingClientRect().top}, txt);
@@ -778,11 +784,6 @@ function resetGame() {
   };
   setSpeed(1);
   document.getElementById('nextWaveBtn').disabled = false;
-  // Clear flash
-  const flash = document.getElementById('flashOverlay');
-  flash.classList.remove('flash-overlay'); 
-  void flash.offsetWidth; 
-  flash.classList.add('hidden');
 
   TOWERS.forEach(t => { game.towerCounts[t.id] = 0; game.dpsCurrent[t.id] = 0; });
   generateObstacles();
@@ -791,7 +792,6 @@ function resetGame() {
 }
 
 function showStarterScreen() {
-    // Random 4 starters
     const pool = [...STARTERS];
     const choices = [];
     while(choices.length < 4 && pool.length > 0) {
@@ -1068,7 +1068,7 @@ class Tower {
     let critChance = game.perks.crit;
     let critMult = game.perks.critMult; // Base e.g. 2.0
     
-    // Logic: If crit chance > 100%, guarantee levels. Last partial level is rolled.
+    // Logic: If crit chance > 1.0, guarantee levels. Last partial level is rolled.
     while(critChance > 0) {
         if(Math.random() < critChance) {
             isCrit = true;
@@ -1509,6 +1509,8 @@ function updateHUD() {
       const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
       const fill = document.getElementById('bossBarFill');
       const val = document.getElementById('bossHpVal');
+      
+      // Force update styles
       fill.style.width = pct + "%";
       val.innerText = Math.ceil(boss.hp) + " / " + Math.ceil(boss.maxHp);
   } else {
@@ -1557,6 +1559,7 @@ function showDraftScreen() {
     else if(r < 0.05 + (game.perks.rarityRare||0)) rarityIdx = 2; 
     else if(r < 0.25 + (game.perks.rarityUncommon||0)) rarityIdx = 1;
     
+    // Mythic Unique Check
     if(rarityIdx === 5) { 
         const availableMythics = MYTHICS.filter(m => !game.mythicHistory.includes(m.id));
         if(availableMythics.length > 0) {
@@ -1589,7 +1592,7 @@ function createCard(container, u, rarityIdx) {
         else if(rarityIdx===5) { 
             u.fn(game); 
             game.artifacts.push({...u, rarity:'mythic'}); 
-            game.mythicHistory.push(u.typeId); 
+            game.mythicHistory.push(u.typeId); // Track ID
             log(`MYTHIC: ${u.name}`); 
         } else addArtifactRecursive(u);
         document.getElementById('modalOverlay').classList.add('hidden'); renderArtifacts(); game.state = 'idle'; document.getElementById('nextWaveBtn').disabled = false;
