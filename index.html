@@ -1,8 +1,9 @@
+html
 <!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>Hyper Rogue TD Neo - Ver.0.2.0</title>
+<title>Hyper Rogue TD Neo - Ver.0.2.1</title>
 <style>
   :root{
     --bg:#050914;
@@ -14,7 +15,7 @@
     --shadow-text: 2px 2px 0px rgba(0,0,0,0.8);
   }
   html,body{height:100%;margin:0;font-family:'Courier New', sans-serif;background:var(--bg);color:var(--text-main);overflow:hidden;user-select:none;}
-  
+
   /* --- LAYOUT --- */
   .screen {
     position:absolute;
@@ -55,22 +56,22 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
   .panel.grow { flex: 1; min-height: 0;
-  } 
+  }
 
   /* --- UI COMPONENTS --- */
   h3{
       margin:0 0 5px 0;
-      font-size:0.85rem; color:var(--accent); 
-      border-bottom:1px solid #23344a; padding-bottom:5px; 
+      font-size:0.85rem; color:var(--accent);
+      border-bottom:1px solid #23344a; padding-bottom:5px;
       display:flex; justify-content:space-between; text-shadow: 1px 1px 0 #000;
   }
-  
+
   .btn {background:linear-gradient(180deg, #1a273a, #0f1724);border:1px solid var(--accent);color:var(--accent);padding:8px;cursor:pointer;border-radius:4px;transition:0.2s;font-weight:bold;font-family:inherit;
     text-shadow: 1px 1px 0 #000;}
   .btn:hover {background:var(--accent);color:#000;box-shadow:0 0 10px var(--accent);
     text-shadow: none;}
   .btn:disabled {border-color:#555;color:#555;pointer-events:none;background:#111;}
-  
+
   .btn-big {padding:15px 40px; font-size:1.2rem; margin-top:30px; margin-bottom: 50px;}
   .btn-danger {border-color:var(--danger);
     color:var(--danger);}
@@ -88,7 +89,7 @@
   .val {font-size:1.1rem;font-weight:bold;color:#fff;
     text-shadow: 2px 2px 0 #000;}
   .controls {pointer-events:auto; display:flex; gap:10px; align-items:center;}
-  
+
   .speed-ctrl { display:flex; gap:2px; background:#000; border-radius:4px;
     overflow:hidden; border:1px solid #444; }
   .spd-btn { background:#111; color:#888; border:none; padding:5px 10px; font-size:0.8rem; cursor:pointer; font-weight:bold;
@@ -106,14 +107,14 @@
   }
   #retryOverlay { background: rgba(50, 0, 0, 0.8); z-index: 3000; }
   #gameOverOverlay { z-index: 4000; background: rgba(0,0,0,0.95); }
-  
+
   .retry-title { font-size: 2.5rem;
     color: var(--danger); font-weight: bold; text-shadow: 0 0 20px var(--danger); animation: pulseRed 0.5s infinite alternate; }
   .retry-sub { font-size: 1.0rem;
     color: #fff; margin-top: 10px; }
   .pause-title {font-size:3rem; color:var(--accent); letter-spacing:5px;
     text-shadow:0 0 15px var(--accent);}
-  
+
   .go-title { font-size: 4rem; color: var(--danger); letter-spacing: 5px; text-shadow: 0 0 20px var(--danger); margin-bottom: 20px; }
   .go-stat { font-size: 1.5rem; color: #fff; }
   .go-cf { font-size: 1.2rem; color: var(--legend); margin-top: 10px; }
@@ -127,8 +128,10 @@
       background: rgba(100, 0, 200, 0.7); border: 1px solid #d000ff;
       padding: 5px 10px; border-radius: 4px; color: #fff; font-size: 0.8rem;
       text-shadow: 0 0 5px #d000ff; animation: pulseEvent 1s infinite alternate;
+      cursor: pointer; pointer-events: auto;
   }
   .event-tag.nerf { background: rgba(200, 50, 0, 0.7); border-color: #ff4d4d; text-shadow: 0 0 5px #ff0000; }
+  .event-tag.mixed { background: rgba(200, 150, 0, 0.7); border-color: #ffaa00; text-shadow: 0 0 5px #ff8800; }
   @keyframes pulseEvent { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.05); opacity: 1; } }
 
   /* BOSS HUD */
@@ -143,7 +146,7 @@
   .boss-bar-fill {height:100%; background:linear-gradient(90deg, #f00, #a00); width:0%;
     transition:width 0.1s;}
   .boss-val {font-size:0.9rem; color:#fff; margin-top:2px; font-weight: bold;}
-  
+
   /* GOLD RUSH OVERLAY */
   #goldRushOverlay {
     position: absolute;
@@ -153,7 +156,7 @@
     z-index: 80; pointer-events: none;
     animation: flashGold 0.5s infinite alternate;
   }
-  
+
   /* ANIMATIONS */
   @keyframes flashGold { 0% { opacity: 0.6; transform: translateX(-50%) scale(1);
   } 100% { opacity: 1; transform: translateX(-50%) scale(1.1); } }
@@ -205,7 +208,7 @@
     box-shadow: 0 0 5px #fff; }
   .artifact-count {position: absolute; bottom: -5px; right: -5px; background: #000; color: #fff; font-size: 8px;
     padding: 1px 3px; border-radius: 4px; border: 1px solid #555; pointer-events: none;}
-  
+
   /* GLOBAL TOOLTIP */
   #globalTooltip { position: absolute;
     pointer-events: none; z-index: 9999; background: rgba(0,0,0,0.95); border: 1px solid var(--accent); padding: 10px; border-radius: 4px; color: #fff; font-size: 0.75rem; white-space: pre-wrap;
@@ -218,7 +221,7 @@
   }
   #secretCode:hover, #secretCode:focus { opacity: 1.0; color: var(--accent); border-color: var(--accent);
   }
-  
+
   /* NEWS BUTTON (5% from Right) */
   #newsBtn { position: absolute; top: 15px; right: 5%;
     background: var(--panel); border: 1px solid var(--accent); color: var(--accent); padding: 5px 15px; cursor: pointer; font-size: 0.8rem; font-weight: bold; z-index: 100;
@@ -259,12 +262,12 @@
     box-shadow: 0 0 10px var(--mythic); animation: pulseMy 1.5s infinite; }
   .card.mythic { background: linear-gradient(135deg, #2e0a14, #4d1429); border-color: var(--mythic);
   }
-  
+
   .card.starter { border-color: #fff; background: linear-gradient(135deg, #111, #222); height: 160px; width: 150px;
   }
   .card.starter:hover { border-color: var(--accent); box-shadow: 0 0 15px var(--accent);
   }
-  
+
   @keyframes pulseLeg {0%{box-shadow:0 0 5px var(--legend);} 50%{box-shadow:0 0 20px var(--legend);} 100%{box-shadow:0 0 5px var(--legend);}}
   @keyframes pulseMy {0%{box-shadow:0 0 5px var(--mythic);} 50%{box-shadow:0 0 25px var(--mythic);} 100%{box-shadow:0 0 5px var(--mythic);}}
 
@@ -289,7 +292,7 @@
   /* LOG OVERLAY (Center-Right) */
   #ingameLog {
     position:absolute;
-    bottom:10px; left: 65%; transform: translateX(-50%); 
+    bottom:10px; left: 65%; transform: translateX(-50%);
     width:450px; height:60px; background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:6px;
     padding:5px 10px; pointer-events:none; font-size:0.7rem; font-family: monospace; color:#ccc;
     display:flex;
@@ -307,17 +310,19 @@
 
 <div id="globalTooltip"></div>
 
-<input type="password" id="secretCode" placeholder="CODE" oninput="checkSecret(this)">
+<input type="password" id="secretCode" placeholder="CODE">
 
 <div id="newsOverlay" class="screen hidden">
     <div class="news-panel">
-        <div class="news-header">PATCH NOTES: Ver.0.2.0</div>
+        <div class="news-header">PATCH NOTES: Ver.0.2.1</div>
         <div class="news-content">
             <ul>
-                <li><strong>[NEW] Wave Events:</strong> 20% Chance for random anomalies after clearing waves.</li>
-                <li><strong>[NEW] Tier Up:</strong> "Tier +1" skill and Mythics now apply to new towers (Start Lv.2+).</li>
-                <li><strong>[FIX] Initialization:</strong> Fixed bugs where artifacts persisted on restart.</li>
-                <li><strong>[FIX] UI:</strong> Improved Game Over screen visibility.</li>
+                <li><strong>[NEW] MONOLITH Enemy:</strong> Ultra-tank that spawns mid-path (Wave 20+).</li>
+                <li><strong>[NEW] 8 Event Types:</strong> Armor Surge, Night Vision, Magnetic Field, Anomaly Rift, Titan Rage, Hyper Rift + existing events.</li>
+                <li><strong>[NEW] Artifacts:</strong> Assassin Scope (HP-based DMG) & Echo Round (delayed DMG).</li>
+                <li><strong>[FIX] Mythic System:</strong> Each mythic now tracked separately - no duplicates in same run.</li>
+                <li><strong>[FIX] Code Input:</strong> Now requires Enter key to submit.</li>
+                <li><strong>[BALANCE] Artifact Values:</strong> Rebalanced for better progression curve.</li>
             </ul>
         </div>
         <button class="btn btn-big" onclick="closeNews()">ACKNOWLEDGE</button>
@@ -328,11 +333,11 @@
   <div class="header">
     <div>
       <h1 style="margin:0; text-shadow:0 0 10px var(--accent);">SYSTEM CORE // UPGRADE</h1>
-      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - Ver.0.2.0</div>
+      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - Ver.0.2.1</div>
     </div>
     <div class="cf-display">CORE FRAGMENTS: <span id="cfVal">0</span></div>
   </div>
-  
+
   <button id="newsBtn" onclick="openNews()">NEWS</button>
 
   <div class="tabs">
@@ -357,9 +362,9 @@
 <div id="gameScreen" class="screen hidden">
   <div id="left">
     <div id="flashOverlay" class="hidden"></div>
-    
+
     <canvas id="c"></canvas>
-    
+
     <div id="eventHud"></div>
 
     <div id="bossHud" class="hidden">
@@ -367,7 +372,7 @@
       <div class="boss-bar-bg"><div class="boss-bar-fill" id="bossBarFill"></div></div>
       <div class="boss-val" id="bossHpVal"></div>
     </div>
-    
+
     <div id="goldRushOverlay" class="hidden">GOLD RUSH!!</div>
 
     <div id="retryOverlay" class="hidden">
@@ -387,7 +392,7 @@
       <div class="stat"><div class="label">INTEGRITY</div><div class="val" id="life">20</div></div>
       <div class="stat"><div class="label">WAVE</div><div class="val" id="wave">0</div></div>
       <div class="stat hidden" id="goldRushInd"><div class="label">BONUS</div><div class="val" style="color:#ffd700;font-size:0.9rem;">GOLD RUSH</div></div>
-      
+
       <div class="stat" style="display:flex;
         align-items:center; gap:5px; padding:0 10px;">
           <div class="label">SPEED</div>
@@ -409,7 +414,7 @@
         <button id="nextWaveBtn" class="btn" onclick="triggerWave()">START [ENTER]</button>
       </div>
     </div>
-    
+
     <div id="dpsMeter">
       <div style="text-align:center;
         color:#888; margin-bottom:4px;">DPS MONITOR</div>
@@ -427,7 +432,7 @@
       <div id="shopList" class="shop-grid"></div>
       <div style="font-size:0.65rem;text-align:center;color:#666;margin-top:3px;">Cost increases per purchase</div>
     </div>
-    
+
     <div class="panel">
       <h3>TECH UPGRADES</h3>
       <div class="shop-grid">
@@ -445,7 +450,7 @@
   </div>
 
   <div id="modalOverlay" class="hidden">
-    <h2 id="modalTitle" style="color:white;text-shadow:0 0 10px 
+    <h2 id="modalTitle" style="color:white;text-shadow:0 0 10px
       var(--accent);"></h2>
     <div id="modalSubtitle" style="color:#aaa;"></div>
     <div id="draftStats" class="stats-box"></div>
@@ -463,14 +468,14 @@ const STARTERS = [
   {name:'FORTRESS', desc:'Start with 50 Integrity', fn: g=>{ g.maxLife=50;
     g.life=50; }},
   {name:'TYCOON', desc:'Start with 400 Credits', fn: g=>g.gold=400},
-  {name:'VETERAN', desc:'Start with Lv.3 Laser', fn: g=>{ 
+  {name:'VETERAN', desc:'Start with Lv.3 Laser', fn: g=>{
       const t = new Tower(5, 5, TOWERS[0], 3);
       g.gold += 150; g.globalMult.dmg += 0.2;
       g.towers.push(t);
   }},
-  {name:'SNIPER ELITE', desc:'Unlock Sniper & Range +20%', fn: g=>{ 
+  {name:'SNIPER ELITE', desc:'Unlock Sniper & Range +20%', fn: g=>{
       TOWERS.find(x=>x.id==='sniper').unlocked=true;
-      g.globalMult.range+=0.2; 
+      g.globalMult.range+=0.2;
   }},
   {name:'GAMBLER', desc:'Start Gold: 100-800', fn: g=>{ g.gold = 100 + Math.floor(Math.random()*701);
     }},
@@ -478,7 +483,7 @@ const STARTERS = [
     }},
   {name:'MINIMALIST', desc:'DMG +50%, Integrity = 1', fn: g=>{ g.globalMult.dmg+=0.5; g.maxLife=1; g.life=1;
     }},
-  {name:'ENGINEER', desc:'All Tech Costs -30%', fn: g=>{ 
+  {name:'ENGINEER', desc:'All Tech Costs -30%', fn: g=>{
       Object.keys(g.techCost).forEach(k => g.techCost[k] = Math.floor(g.techCost[k]*0.7));
     }}
 ];
@@ -491,7 +496,7 @@ const SKILL_TREES = {
       { id:"core_gold_1", name:"Start Gold +30", desc:"Start Gold +30", cost:5, effects:{startGold:30}, prerequisites:[] },
       { id:"core_interest_1", name:"Interest Cap +10", desc:"Interest Cap +10 (Uncapped in v19)", cost:5, effects:{interestCap:10}, prerequisites:[] },
       { id:"core_tech_1", name:"Tech Cost -5%", desc:"Tech Cost -5%", cost:5, effects:{techDiscount:0.05}, prerequisites:[] },
-      { id:"core_wave_gold", name:"Wave Gold +1", 
+      { id:"core_wave_gold", name:"Wave Gold +1",
         desc:"+1 Gold per wave", cost:5, effects:{waveStartGold:1}, prerequisites:[] },
       { id:"core_global_dmg", name:"Global DMG +3%", desc:"All Tower DMG +3%", cost:12, effects:{globalDmg:0.03}, prerequisites:["core_life_1"] },
       { id:"core_global_range", name:"Global RNG +3%", desc:"All Tower Range +3%", cost:12, effects:{globalRange:0.03}, prerequisites:["core_gold_1"] },
@@ -503,7 +508,7 @@ const SKILL_TREES = {
       { id:"core_explode_small", name:"Explode Dmg +10%", desc:"Explode DMG +10%", cost:25, effects:{explode:0.10}, prerequisites:["core_global_spd"] },
       { id:"core_laser_width", name:"Laser Width +10%", desc:"Beam Width +10%", cost:25, effects:{laserWidth:0.10}, prerequisites:["core_merge_bonus"] },
       { id:"core_start_boost", name:"Start Boost +2s", desc:"Wave Start Haste +2s", cost:25, effects:{startBoost:2}, prerequisites:["core_cf_gain"] },
-      { id:"core_max_life_big", name:"Max Integrity +10", desc:"Base Integrity +10", cost:40, effects:{maxLife:10}, 
+      { id:"core_max_life_big", name:"Max Integrity +10", desc:"Base Integrity +10", cost:40, effects:{maxLife:10},
         prerequisites:["core_dmg_big"] },
       { id:"core_start_gold_big", name:"Start Gold +100", desc:"Start Gold +100", cost:40, effects:{startGold:100}, prerequisites:["core_crit_small"] },
       { id:"core_easy_start", name:"Easy Start", desc:"Wave 1-3 Enemy HP -20%", cost:40, effects:{earlyEasy:true}, prerequisites:["core_explode_small"] },
@@ -514,14 +519,14 @@ const SKILL_TREES = {
     "name": "Artifact Mastery",
     "skills": [
       { id:"art_slot_1", name:"Artifact Slots +3", desc:"Inventory +3", cost:6, effects:{artifactSlot:3}, prerequisites:[] },
-      { id:"art_common_down", name:"Less Common", 
+      { id:"art_common_down", name:"Less Common",
         desc:"Common Chance -5%", cost:6, effects:{rarityCommon:-0.05}, prerequisites:[] },
       { id:"art_draft_plus", name:"Draft Options +1", desc:"Draft Choice +1", cost:12, effects:{draftChoices:1}, prerequisites:["art_slot_1"] },
       { id:"art_uncommon_up", name:"More Uncommon", desc:"Uncommon Chance +5%", cost:12, effects:{rarityUncommon:0.05}, prerequisites:["art_common_down"] },
       { id:"art_merge_bonus_perm", name:"Perm Merge Bonus", desc:"Merge grants +1% DMG", cost:12, effects:{mergePermanentDmg:0.01}, prerequisites:["art_slot_1"] },
       { id:"art_rare_up", name:"More Rare", desc:"Rare Chance +5%", cost:20, effects:{rarityRare:0.05}, prerequisites:["art_draft_plus"] },
       { id:"art_mythic_chance_plus", name:"Mythic Chance +", desc:"Mythic +0.05%", cost:20, effects:{mythicChance:0.0005}, prerequisites:["art_uncommon_up"] },
-      { id:"art_merge_value", name:"Merge Value +5%", 
+      { id:"art_merge_value", name:"Merge Value +5%",
         desc:"Upgrade Value +5%", cost:20, effects:{mergeValueBoost:0.05}, prerequisites:["art_merge_bonus_perm"] },
       { id:"art_bp_chance", name:"Blueprint +20%", desc:"BP Drop Rate +20%", cost:40, effects:{blueprintChance:0.20}, prerequisites:["art_rare_up"] },
       { id:"art_mythic_plus_big", name:"Mythic Chance ++", desc:"Mythic +0.1%", cost:40, effects:{mythicChance:0.001}, prerequisites:["art_mythic_chance_plus"] }
@@ -532,21 +537,21 @@ const SKILL_TREES = {
     "skills": [
       { id:"laser_pierce_1", name:"Laser Pierce +1", desc:"Laser Pierce +1", cost:6, effects:{laserPierce:1}, prerequisites:[] },
       { id:"laser_dmg_1", name:"Laser DMG +5%", desc:"Laser DMG +5%", cost:6, effects:{laserDmg:0.05}, prerequisites:[] },
-      { 
+      {
         id:"laser_range", name:"Laser Range +10%", desc:"Laser Range +10%", cost:12, effects:{laserRange:0.10}, prerequisites:["laser_pierce_1"] },
       { id:"laser_mark", name:"Laser Marking", desc:"Hits amplify dmg", cost:22, effects:{laserMark:true}, prerequisites:["laser_range"] },
       { id:"beam_dmg_1", name:"Beam DMG +10%", desc:"Beam DMG +10%", cost:8, effects:{beamDmg:0.10}, prerequisites:[] },
       { id:"beam_cool", name:"Beam CD -10%", desc:"Cooldown -10%", cost:15, effects:{beamCd:-0.10}, prerequisites:["beam_dmg_1"] },
       { id:"beam_aoe", name:"Beam Shock", desc:"Beam deals AOE", cost:15, effects:{beamShockAoe:true}, prerequisites:["beam_dmg_1"] },
       { id:"blaster_prox", name:"Blaster Prox +20%", desc:"Prox bonus +20%", cost:8, effects:{blasterProx:0.20}, prerequisites:[] },
-      { id:"blaster_slow", 
+      { id:"blaster_slow",
         name:"Blaster Slow", desc:"Hits slow 10%", cost:12, effects:{blasterSlow:0.10}, prerequisites:["blaster_prox"] },
       { id:"blaster_shockwave", name:"Shockwave", desc:"50% chance shock", cost:20, effects:{blasterShock:0.5}, prerequisites:["blaster_slow"] },
       { id:"sniper_crit", name:"Sniper Crit +4%", desc:"Crit Chance +4%", cost:6, effects:{sniperCrit:0.04}, prerequisites:[] },
       { id:"sniper_range", name:"Sniper RNG +15%", desc:"Range +15%", cost:12, effects:{sniperRange:0.15}, prerequisites:["sniper_crit"] },
       { id:"sniper_pierce", name:"Sniper Pierce", desc:"Pierce +1", cost:20, effects:{sniperPierce:1}, prerequisites:["sniper_range"] },
       { id:"rocket_aoe", name:"Rocket Radius +10%", desc:"AOE +10%", cost:8, effects:{rocketAoe:0.10}, prerequisites:[] },
-      { id:"rocket_speed", name:"Rocket Speed +20%", desc:"Speed +20%", 
+      { id:"rocket_speed", name:"Rocket Speed +20%", desc:"Speed +20%",
         cost:15, effects:{rocketSpeed:0.20}, prerequisites:["rocket_aoe"] },
       { id:"rocket_split", name:"Split Rocket", desc:"Splits on fire", cost:25, effects:{rocketSplit:true}, prerequisites:["rocket_speed"] },
       { id:"railgun_dmg", name:"Railgun DMG +10%", desc:"DMG +10%", cost:10, effects:{railgunDmg:0.10}, prerequisites:[] },
@@ -557,7 +562,7 @@ const SKILL_TREES = {
   "paradox": {
     "name": "Paradox",
     "skills": [
-      { id:"para_doublehit", name:"Quantum Doubler", desc:"25% chance double hit", cost:50, 
+      { id:"para_doublehit", name:"Quantum Doubler", desc:"25% chance double hit", cost:50,
         effects:{doubleHit:0.25}, prerequisites:[] },
       { id:"para_neural", name:"Neural Overdrive", desc:"SPD x2 but 25% Miss", cost:50, effects:{overdrive:true}, prerequisites:[] },
       { id:"para_gravity", name:"Gravity Break", desc:"Enemy -40% SPD, +30% HP", cost:80, effects:{enemySlow:0.40, enemyHpBoost:0.30}, prerequisites:["para_doublehit"] },
@@ -575,9 +580,8 @@ const ctx = canvas.getContext('2d');
 
 let saveData = { cf: 0, unlocked: [], seenVersion: null };
 let activeTab = 'nexus_core';
-let animationId = null; 
-const CURRENT_VERSION = "0.2.0";
-// Version Reset
+let animationId = null;
+const CURRENT_VERSION = "0.2.1"; // Updated Version
 
 /* --- GAME DEFINITIONS --- */
 const RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
@@ -594,29 +598,36 @@ const BASE_TOWERS = [
 ];
 let TOWERS = JSON.parse(JSON.stringify(BASE_TOWERS));
 
-// EVENTS
+// EVENTS (EXPANDED)
 const WAVE_EVENTS = [
-    {id:'laser_overload', name:'LASER OVERLOAD', desc:'Laser DMG x3', duration:10, type:'buff'},
-    {id:'mythic_res', name:'MYTHIC RESONANCE', desc:'Mythic Chance Up', duration:3, type:'buff'},
-    {id:'rocket_jam', name:'ROCKET JAM', desc:'Rocket DMG x0.6', duration:8, type:'nerf'}
+    {id:'armor_surge', name:'ARMOR SURGE', desc:'All enemies gain +5 Armor.', duration:5, type:'nerf', onStart: e => e.armor += 5, onEnd: e => e.armor -= 5},
+    {id:'night_vision', name:'NIGHT VISION', desc:'Reduced vision. Sniper towers are unaffected.', duration:5, type:'nerf', special:'night_vision'},
+    {id:'magnetic_distortion', name:'MAGNETIC FIELD', desc:'Enemies periodically shift positions.', duration:4, type:'mixed', special:'magnetic_distortion'},
+    {id:'anomaly_rift', name:'ANOMALY RIFT', desc:'Enemies have a 50% chance to evade non-piercing attacks.', duration:3, type:'nerf', special:'anomaly_rift'},
+    {id:'titan_rage', name:'TITAN RAGE', desc:'The next Boss will evolve mid-fight, healing and gaining HP.', duration:1, type:'nerf', special:'titan_rage'},
+    {id:'hyper_rift', name:'HYPER RIFT', desc:'Enemies are 50% faster, but drop 3x Credits.', duration:3, type:'mixed', onStart: e => {e.speed *= 1.5}, onEnd: e => {e.speed /= 1.5}, special:'hyper_bounty'},
+    {id:'mythic_res', name:'MYTHIC RESONANCE', desc:'Mythic Artifact chance is greatly increased for 3 waves.', duration:3, type:'buff', special:'mythic_chance_up'},
+    {id:'gold_rush', name:'GOLD RUSH', desc:'All Credit drops are doubled.', duration:4, type:'buff', special:'gold_rush'}
 ];
 
 // ARTIFACTS
-const ARTIFACT_TYPES = [
-  {id:'atk', name:'Core', desc:'DMG +[X]%', val:[6, 12, 20, 35, 50], fn:(g,v)=>g.globalMult.dmg+=v/100},
-  {id:'spd', name:'Servo', desc:'SPD +[X]%', val:[6, 12, 20, 35, 50], fn:(g,v)=>g.globalMult.spd+=v/100},
-  {id:'rng', name:'Lens', desc:'RNG +[X]%', val:[10, 20, 30, 45, 70], fn:(g,v)=>g.globalMult.range+=v/100},
-  {id:'eco', name:'Chip', desc:'Interest +[X]%', val:[0.1, 0.2, 0.3, 0.4, 0.5], fn:(g,v)=>g.perks.interest+=v/100}, 
-  {id:'crit', name:'Aim', desc:'Crit +[X]%', val:[3, 6, 9, 15, 25], fn:(g,v)=>g.perks.crit+=v/100},
-  {id:'boom', name:'Powder', desc:'Explode [X]% DMG', val:[10, 20, 30, 50, 80], fn:(g,v)=>g.perks.explodeDmg+=v/100},
-  {id:'coil', name:'Overload', desc:'Crit DMG +[X]%', val:[30, 50, 70, 100, 150], fn:(g,v)=>g.perks.critMult += v/100},
-  {id:'armor', 
-    name:'Hardlight', desc:'Max Integrity +[X]', val:[1, 2, 4, 6, 10], fn:(g,v)=>{ g.maxLife += v; g.life += v;
-    }},
-  {id:'burst', name:'Q.Charge', desc:'Start Burst +[X]s', val:[1, 2, 3, 4, 5], fn:(g,v)=>g.perks.startBoost += v},
-  {id:'scope', name:'Scope', desc:'Assassin: Full HP +30%, Low HP +20%', val:[1,1,1,1,1], fn:(g,v)=>g.perks.assassinScope=true},
-  {id:'echo', name:'Echo', desc:'Echo Round: Hit triggers 50% dmg after 0.25s', val:[1,1,1,1,1], fn:(g,v)=>g.perks.echoRound=true}
+const BASE_ARTIFACTS = [
+  {id:'atk', name:'Core', desc:'DMG +[X]%', val:[5, 10, 18, 30, 45], fn:(g,v)=>g.globalMult.dmg+=v/100}, // Nerfed
+  {id:'spd', name:'Servo', desc:'SPD +[X]%', val:[5, 10, 18, 30, 45], fn:(g,v)=>g.globalMult.spd+=v/100}, // Nerfed
+  {id:'rng', name:'Lens', desc:'RNG +[X]%', val:[8, 15, 25, 40, 60], fn:(g,v)=>g.globalMult.range+=v/100}, // Nerfed
+  {id:'eco', name:'Chip', desc:'Interest +[X]%', val:[0.1, 0.2, 0.3, 0.4, 0.5], fn:(g,v)=>g.perks.interest+=v/100},
+  {id:'crit', name:'Aim', desc:'Crit +[X]%', val:[2, 4, 7, 12, 20], fn:(g,v)=>g.perks.crit+=v/100}, // Nerfed
+  {id:'boom', name:'Powder', desc:'Explode [X]% DMG', val:[8, 15, 25, 40, 70], fn:(g,v)=>g.perks.explodeDmg+=v/100}, // Nerfed
+  {id:'coil', name:'Overload', desc:'Crit DMG +[X]%', val:[25, 40, 60, 90, 140], fn:(g,v)=>g.perks.critMult += v/100}, // Nerfed
+  {id:'armor', name:'Hardlight', desc:'Max Integrity +[X]', val:[1, 2, 4, 6, 10], fn:(g,v)=>{ g.maxLife += v; g.life += v; }},
+  {id:'burst', name:'Q.Charge', desc:'Start Burst +[X]s', val:[1, 2, 3, 4, 5], fn:(g,v)=>g.perks.startBoost += v}
 ];
+const UNIQUE_ARTIFACTS = [
+  {id:'scope', name:'Assassin Scope', rarityIdx: 2, desc:'Deal up to +30% DMG to full HP enemies and +20% to enemies below 20% HP.', fn:g=>g.perks.assassinScope=true},
+  {id:'echo', name:'Echo Round', rarityIdx: 2, desc:'Attacks trigger a secondary, 50% damage hit 0.25s later.', fn:g=>g.perks.echoRound=true}
+];
+let ARTIFACT_TYPES = [...BASE_ARTIFACTS];
+
 const MYTHICS = [
   {id:'god', name:'DEUS EX', rarity:'mythic', desc:'MYTHIC: All Towers Tier +1 Stats', fn: g=>g.globalMult.tierBonus+=1},
   {id:'midas', name:'MIDAS TOUCH', rarity:'mythic', desc:'MYTHIC: +1 Gold per Hit', fn: g=>g.perks.goldPerHit+=1},
@@ -631,7 +642,7 @@ const MYTHICS = [
 
 /* --- SAVE SYSTEM --- */
 function loadSave() {
-  const s = localStorage.getItem('hyperRogueV0_2_0');
+  const s = localStorage.getItem('hyperRogueV0_2_1'); // Updated Save Key
   if(s) {
     try {
       const d = JSON.parse(s);
@@ -645,35 +656,42 @@ function loadSave() {
   checkNews();
 }
 function saveGame() {
-  localStorage.setItem('hyperRogueV0_2_0', JSON.stringify(saveData));
+  localStorage.setItem('hyperRogueV0_2_1', JSON.stringify(saveData)); // Updated Save Key
   updateUpgradeUI();
 }
 
 /* --- SECRET CODE SYSTEM --- */
-function checkSecret(input) {
-    if(input.value === '1211') {
-        saveData.cf += 50;
-        saveGame();
-        alert("SECRET CODE ACCEPTED: +50 CF");
-        input.value = '';
-    } else if(input.value === '1214') {
-        saveData.cf += 2048;
-        saveGame();
-        alert("DEV CODE ACCEPTED: +2048 CF");
-        input.value = '';
+document.getElementById('secretCode').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const input = document.getElementById('secretCode');
+        if(input.value === 'manifest') {
+            saveData.cf += 50;
+            saveGame();
+            alert("SECRET CODE ACCEPTED: +50 CF");
+            input.value = '';
+        } else if(input.value === 'devalpha') {
+            saveData.cf += 2048;
+            saveGame();
+            alert("DEV CODE ACCEPTED: +2048 CF");
+            input.value = '';
+        }
+        input.blur();
     }
-}
+});
+
 
 /* --- NEWS SYSTEM --- */
 function checkNews() {
     if(saveData.seenVersion !== CURRENT_VERSION) {
-        document.getElementById('newsOverlay').classList.remove('hidden');
+        openNews();
     }
 }
 function closeNews() {
     document.getElementById('newsOverlay').classList.add('hidden');
-    saveData.seenVersion = CURRENT_VERSION;
-    saveGame();
+    if(saveData.seenVersion !== CURRENT_VERSION) {
+        saveData.seenVersion = CURRENT_VERSION;
+        saveGame();
+    }
 }
 function openNews() {
     document.getElementById('newsOverlay').classList.remove('hidden');
@@ -706,7 +724,7 @@ function updateUpgradeUI() {
 
     el.innerHTML = `
       <div class="skill-name">${skill.name}</div>
-      
+
       <div class="skill-desc">${skill.desc}</div>
       <div class="skill-cost">${isUnlocked ? 'ACQUIRED' : (skill.cost + ' CF')}</div>
       ${isUnlocked ? '<div class="skill-owned">✔</div>' : ''}
@@ -728,9 +746,9 @@ function startGameFromMenu() {
   document.getElementById('upgradeScreen').classList.add('hidden');
   document.getElementById('gameOverOverlay').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
-  
+
   initGame();
-  resize(); 
+  resize();
   showStarterScreen();
 }
 
@@ -742,7 +760,7 @@ function returnToMenu() {
   document.getElementById('modalOverlay').classList.add('hidden');
   document.getElementById('newsOverlay').classList.add('hidden');
   document.getElementById('flashOverlay').classList.add('hidden');
-  
+
   hideTooltip();
   updateUpgradeUI();
   game = null;
@@ -768,7 +786,7 @@ function setSpeed(s) {
 }
 function retireGame() {
   if(!game) return;
-  const cfEarned = Math.round(game.wave * 0.25);
+  const cfEarned = Math.round(game.wave * 0.25 * (1 + (game.perks.cfGain||0))); // Apply CF Gain
   saveData.cf += cfEarned;
   saveGame();
   log(`RETIRED. EARNED ${cfEarned} CF.`);
@@ -778,9 +796,8 @@ function retireGame() {
 /* --- STATS DISPLAY --- */
 function renderCurrentStats(containerId) {
     const el = document.getElementById(containerId);
-    if(!el) return;
+    if(!el || !game) return;
     const p = (v) => (v > 0 ? "+" : "") + Math.round(v*100) + "%";
-    // Calculate Interest Rate
     let interestRate = 0.03 + game.perks.interest;
     const s = [
         {l:"Global DMG", v:p(game.globalMult.dmg)},
@@ -789,7 +806,7 @@ function renderCurrentStats(containerId) {
         {l:"Crit Chance", v:Math.round(game.perks.crit*100) + "%"},
         {l:"Crit Mult", v:"x" + game.perks.critMult.toFixed(1)},
         {l:"Explode DMG", v:p(game.perks.explodeDmg)},
-        {l:"Interest Rate", v:(interestRate*100).toFixed(1) + "%"}, 
+        {l:"Interest Rate", v:(interestRate*100).toFixed(1) + "%"},
         {l:"Start Gold", v:"+"+game.perks.waveStartGold},
         {l:"Gold/Hit", v:"+"+game.perks.goldPerHit},
         {l:"Mythic Chance", v:(game.perks.mythicChance*100).toFixed(2)+"%"},
@@ -806,7 +823,7 @@ function renderCurrentStats(containerId) {
 /* --- TOOLTIP LOGIC --- */
 const tooltipEl = document.getElementById('globalTooltip');
 function showTooltip(e, text) {
-    tooltipEl.innerText = text;
+    tooltipEl.innerHTML = text;
     tooltipEl.style.display = 'block';
     moveTooltip(e);
 }
@@ -815,12 +832,12 @@ function hideTooltip() {
 }
 function moveTooltip(e) {
     if(tooltipEl.style.display === 'block') {
-        const x = e.clientX + 10;
-        const y = e.clientY + 10;
+        const x = e.clientX + 15;
+        const y = e.clientY + 15;
         const rect = tooltipEl.getBoundingClientRect();
         let left = x; let top = y;
-        if(left + rect.width > window.innerWidth) left = x - rect.width - 20;
-        if(top + rect.height > window.innerHeight) top = y - rect.height - 20;
+        if(left + rect.width > window.innerWidth) left = x - rect.width - 30;
+        if(top + rect.height > window.innerHeight) top = y - rect.height - 30;
         tooltipEl.style.left = left + 'px';
         tooltipEl.style.top = top + 'px';
     }
@@ -832,8 +849,8 @@ function showTechTooltip(type, el) {
     else if(type==='range') txt = `Range Multiplier: x${(1+game.globalMult.range).toFixed(2)}`;
     else if(type==='spd') txt = `Speed Multiplier: x${(1+game.globalMult.spd).toFixed(2)}`;
     else if(type==='life') txt = `Restore Integrity (+5)\nMax: ${game.maxLife}`;
-    txt += `\nNext Cost: ${game.techCost[type]} CR`;
-    
+    txt += `\n<span style='color:var(--legend)'>Next Cost: ${game.techCost[type]} CR</span>`;
+
     showTooltip({clientX: el.getBoundingClientRect().right, clientY: el.getBoundingClientRect().top}, txt);
 }
 window.addEventListener('mousemove', moveTooltip);
@@ -847,7 +864,7 @@ function initGame() {
 
 function resetGame() {
   TOWERS = JSON.parse(JSON.stringify(BASE_TOWERS));
-  // Clear UI
+  ARTIFACT_TYPES = [...BASE_ARTIFACTS];
   document.getElementById('artifacts').innerHTML = '';
   document.getElementById('logContent').innerHTML = '';
   document.getElementById('dpsList').innerHTML = '';
@@ -860,19 +877,19 @@ function resetGame() {
     blocked: [],
     towers: [], enemies: [], particles: [], lasers: [], dmgTexts: [],
     globalMult: { dmg:0, range:0, spd:0, tierBonus:0 },
-    perks: { 
-        interest:0, crit:0, critMult:2.0, explodeDmg:0, 
-        startHpMult:1, goldPerHit:0, mythicChance: 0.004, slowMult:1, 
+    perks: {
+        interest:0, crit:0, critMult:2.0, explodeDmg:0,
+        startHpMult:1, goldPerHit:0, mythicChance: 0.004, slowMult:1,
         debuffArmor:0, doubleHit:0, startBoost:0, interestCap:99999,
         cfGain:0, waveStartGold:0, blueprintChance:0.15,
         overdrive: false, midas: false,
         assassinScope: false, echoRound: false
     },
     techCost: { dmg:100, range:100, spd:100, life:50 },
-    towerCounts: {}, 
-    artifacts: [], 
-    mythicHistory: [],
-    activeEvents: [], // New Event System
+    towerCounts: {},
+    artifacts: [],
+    mythicHistory: new Set(),
+    activeEvents: [],
     lifeAtWaveStart: 0,
     enemiesToSpawn: 0,
     enemiesSpawned: 0,
@@ -880,14 +897,14 @@ function resetGame() {
     waveStartTime: 0,
     dpsCurrent: {}, lastDpsUpdate: 0,
     augments: {},
-    bossKillBonusWave: -1
+    bossKillBonusWave: -1,
   };
   setSpeed(1);
   document.getElementById('nextWaveBtn').disabled = false;
-  
+
   const flash = document.getElementById('flashOverlay');
-  flash.classList.remove('flash-overlay'); 
-  void flash.offsetWidth; 
+  flash.classList.remove('flash-overlay');
+  void flash.offsetWidth;
   flash.classList.add('hidden');
 
   document.getElementById('goldRushOverlay').classList.add('hidden');
@@ -906,7 +923,7 @@ function showStarterScreen() {
         choices.push(pool[idx]);
         pool.splice(idx, 1);
     }
-    
+
     const modal = document.getElementById('modalOverlay');
     const container = document.getElementById('cards');
     document.getElementById('modalTitle').innerText = "INITIALIZE PROTOCOL";
@@ -922,7 +939,7 @@ function showStarterScreen() {
             modal.classList.add('hidden');
             log(`PROTOCOL ACTIVE: ${s.name}`);
             updateHUD();
-            renderShop(); 
+            renderShop();
             draw();
         };
         container.appendChild(el);
@@ -931,16 +948,16 @@ function showStarterScreen() {
 
 function applyPermanentUpgrades() {
   const allSkills = [
-    ...SKILL_TREES.nexus_core.skills, 
-    ...SKILL_TREES.artifact_mastery.skills, 
-    ...SKILL_TREES.weapon_system.skills, 
+    ...SKILL_TREES.nexus_core.skills,
+    ...SKILL_TREES.artifact_mastery.skills,
+    ...SKILL_TREES.weapon_system.skills,
     ...SKILL_TREES.paradox.skills
   ];
   saveData.unlocked.forEach(id => {
     const s = allSkills.find(x => x.id === id);
     if(!s) return;
     const fx = s.effects;
-    
+
     if(fx.baseLife) { game.maxLife += fx.baseLife; game.life = game.maxLife; }
     if(fx.startGold) game.gold += fx.startGold;
     if(fx.techDiscount) Object.keys(game.techCost).forEach(k => game.techCost[k] = Math.floor(game.techCost[k] * (1-fx.techDiscount)));
@@ -973,7 +990,7 @@ function applyPermanentUpgrades() {
     if(fx.blasterShock) game.augments.blasterShock = true;
     if(fx.blasterAoeMult) game.augments.blasterAoeMult = fx.blasterAoeMult;
 
-    if(fx.sniperCrit) game.perks.crit += fx.sniperCrit; 
+    if(fx.sniperCrit) game.perks.crit += fx.sniperCrit;
     if(fx.sniperDmg) modifyTower('sniper', t => t.dmg *= (1+fx.sniperDmg));
     if(fx.sniperRange) modifyTower('sniper', t => t.range *= (1+fx.sniperRange));
     if(fx.sniperPierce) modifyTower('sniper', t => { t.type='pierce'; t.pierce=1; });
@@ -986,7 +1003,7 @@ function applyPermanentUpgrades() {
     if(fx.railgunPierce) modifyTower('railgun', t => t.pierce += fx.railgunPierce);
     if(fx.railgunVuln) game.augments.railgunVuln = true;
     if(fx.doubleHit) game.perks.doubleHit += fx.doubleHit;
-    if(fx.overdrive) game.perks.overdrive = true; 
+    if(fx.overdrive) game.perks.overdrive = true;
     if(fx.enemySlow) game.perks.enemySlow = fx.enemySlow;
     if(fx.enemyHpBoost) game.perks.enemyHpBoost = fx.enemyHpBoost;
     if(fx.midas) game.perks.midas = true;
@@ -996,11 +1013,11 @@ function modifyTower(id, fn) { const t=TOWERS.find(x=>x.id===id); if(t) fn(t); }
 
 /* --- LOGIC CLASSES --- */
 class Particle {
-  constructor(x, y, color, speed=0.2) {
+  constructor(x, y, color, speed=0.2, life=1.0) {
     this.x = x;
     this.y = y; this.color = color;
     this.vx = (Math.random()-0.5)*speed; this.vy = (Math.random()-0.5)*speed;
-    this.life = 1.0;
+    this.life = life;
   }
   update() { this.x+=this.vx;
     this.y+=this.vy; this.life-=0.04; }
@@ -1034,11 +1051,11 @@ class DamageText {
 class Enemy {
   constructor(path, wave, type='normal', progressOverride=0) {
     this.path = path; this.type = type;
-    const currentWave = Math.max(1, wave); 
+    const currentWave = Math.max(1, wave);
     let hpMult = 1.0;
     if(game.perks.earlyEasy && currentWave <= 3) hpMult = 0.8;
     if(game.perks.enemyHpBoost) hpMult += game.perks.enemyHpBoost;
-    this.maxHp = Math.floor(15 * Math.pow(1.22, currentWave) * hpMult); 
+    this.maxHp = Math.floor(15 * Math.pow(1.22, currentWave) * hpMult);
     if(game.perks.startHpMult) this.maxHp = Math.floor(this.maxHp * game.perks.startHpMult);
     this.speed = 1.0 + (currentWave * 0.04);
     if(game.perks.slowMult) this.speed *= game.perks.slowMult;
@@ -1046,66 +1063,77 @@ class Enemy {
 
     this.shield = 0;
     this.armor = 0; this.regen = 0; this.debuffs = { slow:0, vuln:0, mark:0 };
-    if (this.type === 'boss') { this.maxHp *= 6; this.speed *= 0.6;
+    if (this.type === 'boss') {
+        this.maxHp *= (6 + wave*0.1);
+        this.speed *= 0.6;
+        this.armor += Math.floor(wave / 5);
+        this.canEvolve = game.activeEvents.some(e => e.special === 'titan_rage');
     }
-    if (this.type === 'shield') { this.shield = 20;
-    } 
-    if (this.type === 'tank') { this.maxHp *= 6; this.speed *= 0.5;
-    }
-    if (this.type === 'elite') { this.maxHp *= 1.5; if(Math.random()<0.5) this.speed *= 1.3; else this.armor = 3;
-    }
-    if (this.type === 'phase') { this.speed *= 0.9; this.phaseCool = 0.5;
-    }
-    if (this.type === 'ghost') { this.maxHp *= 0.6; this.speed *= 1.2;
-    }
-    
+    if (this.type === 'tank') { this.maxHp *= 6; this.speed *= 0.5; this.armor += 3; }
+    if (this.type === 'elite') { this.maxHp *= 1.5; if(Math.random()<0.5) this.speed *= 1.3; else this.armor = 3; }
+    if (this.type === 'phase') { this.speed *= 0.9; this.phaseCool = 0.5; }
+
     if (this.type === 'monolith') {
         this.maxHp *= 12;
         this.speed *= 0.2;
-        progressOverride = Math.floor(path.length / 2);
+        progressOverride = Math.floor(path.length / 2) + Math.random() * 4 - 2;
     }
 
-    this.hp = this.maxHp; 
+    this.hp = this.maxHp;
     this.progress = progressOverride;
-    this.alive = true; 
-    
+    this.alive = true;
+    this.pos = {x:0, y:0};
+    this.visualPos = {x:0, y:0}; // For magnetic distortion
+
     const i = Math.floor(this.progress);
     if (i < this.path.length) {
-        this.pos = {x:path[i].x, y:path[i].y};
+        this.pos.x = this.path[i].x + 0.5;
+        this.pos.y = this.path[i].y + 0.5;
+        this.visualPos = {...this.pos};
     } else {
-        this.pos = {x:0, y:0};
         this.alive = false;
     }
   }
   update(dt) {
+    if(!this.alive) return;
     if(this.regen > 0 && this.hp < this.maxHp) this.hp += this.regen * dt;
-    if(this.type === 'phase') {
-        this.phaseCool -= dt;
-        if(this.phaseCool <= 0) { this.progress += 0.8; this.phaseCool = 0.75; spawnParticles(this.pos.x, this.pos.y, '#00ffff', 3);
-        }
-    }
+
     let actualSpeed = this.speed * (1.0 - this.debuffs.slow);
+    const hyperRift = game.activeEvents.find(e=>e.special === 'hyper_bounty');
+    if(hyperRift) actualSpeed *= 1.5;
+
     this.progress += actualSpeed * dt;
     const i = Math.floor(this.progress);
-    if(i >= this.path.length-1) { this.alive=false; this.reached=true; return;
-    }
+    if(i >= this.path.length-1) { this.alive=false; this.reached=true; return; }
     const t = this.progress - i;
     this.pos.x = this.path[i].x + (this.path[i+1].x - this.path[i].x)*t + 0.5;
     this.pos.y = this.path[i].y + (this.path[i+1].y - this.path[i].y)*t + 0.5;
-  }
-  takeDmg(amt, isCrit=false, srcId='unknown', critLevel=0) {
-    if(game.perks.overdrive && Math.random() < 0.25) { game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y - 0.5, "MISS", "#aaa"));
-    return; }
-    if (this.type === 'ghost') {
-        const tDef = TOWERS.find(t=>t.id===srcId);
-        const isPierce = tDef ? tDef.type==='pierce' : false;
-        if (!isPierce && Math.random() < 0.5) { game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y - 0.5, "MISS", "#aaa"));
-    return; }
+
+    this.visualPos = {...this.pos};
+    if (game.activeEvents.some(e=>e.special==='magnetic_distortion')) {
+        this.visualPos.x += Math.sin(Date.now() / 100 + this.progress) * 0.2;
+        this.visualPos.y += Math.cos(Date.now() / 100 + this.progress) * 0.2;
     }
-    if (this.shield > 0) { this.shield--; game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y, "BLOCK", "#2ee6ff"));
+
+    if(this.type === 'boss' && this.canEvolve && this.hp < this.maxHp * 0.5) {
+        this.maxHp *= 1.25;
+        this.hp = this.maxHp;
+        this.canEvolve = false;
+        spawnParticles(this.pos.x, this.pos.y, '#ff0000', 50, 3.0);
+        log("BOSS HAS EVOLVED!");
+    }
+  }
+  takeDmg(amt, isCrit=false, srcId='unknown', critLevel=0, options = {}) {
+    if(!this.alive) return;
+    const isAnomalyRift = game.activeEvents.some(e=>e.special==='anomaly_rift');
+    if(isAnomalyRift && !options.isPiercing && Math.random() < 0.5) {
+        game.dmgTexts.push(new DamageText(this.visualPos.x, this.visualPos.y - 0.5, "RIFT", "#aaa"));
+        return;
+    }
+
+    if(game.perks.overdrive && Math.random() < 0.25) { game.dmgTexts.push(new DamageText(this.visualPos.x, this.visualPos.y - 0.5, "MISS", "#aaa"));
     return; }
-    
-    // NEW: Assassin Scope Artifact logic
+
     if(game.perks.assassinScope) {
         if(this.hp >= this.maxHp) amt *= 1.3;
         else if(this.hp <= this.maxHp * 0.2) amt *= 1.2;
@@ -1115,18 +1143,18 @@ class Enemy {
     let finalDmg = Math.max(1, (amt * multiplier) - this.armor);
     this.hp -= finalDmg;
     if(srcId && game.dpsCurrent[srcId] !== undefined) game.dpsCurrent[srcId] += finalDmg;
+
     let goldGain = game.perks.goldPerHit;
-    if(game.bossKillBonusWave === game.wave) goldGain *= 2;
+    if(game.bossKillBonusWave === game.wave || game.activeEvents.some(e=>e.special==='gold_rush')) goldGain *= 2;
     if(goldGain > 0) game.gold += goldGain;
-    
+
     let color = '#fff';
     if(isCrit) {
         if(critLevel === 1) color = '#ffd700';
-        else if(critLevel === 2) color = '#ff8c00'; 
+        else if(critLevel === 2) color = '#ff8c00';
         else if(critLevel >= 3) color = '#ff0000';
     }
-    game.dmgTexts.push(new DamageText(this.pos.x, this.pos.y - 0.5, Math.floor(finalDmg), color, isCrit, critLevel));
-    // NEW: Echo Round Artifact logic
+    game.dmgTexts.push(new DamageText(this.visualPos.x, this.visualPos.y - 0.5, Math.floor(finalDmg), color, isCrit, critLevel));
     if(game.perks.echoRound && srcId !== 'echo') {
         setTimeout(() => {
             if(this.alive) this.takeDmg(finalDmg * 0.5, false, 'echo');
@@ -1136,7 +1164,7 @@ class Enemy {
     if(this.hp <= 0 && this.alive) {
       this.alive = false;
       this.killed = true; spawnParticles(this.pos.x, this.pos.y, '#ff4d4d', 5);
-      
+
       if(this.type === 'boss') {
           grantBossReward();
           game.bossKillBonusWave = game.wave + 1;
@@ -1157,9 +1185,9 @@ class Enemy {
 }
 
 class Tower {
-  constructor(x, y, def, tier=1) { 
+  constructor(x, y, def, tier=1) {
       this.x = x;
-      this.y = y; this.def = def; this.tier = tier; 
+      this.y = y; this.def = def; this.tier = tier;
       this.cool = 0; this.angle = 0;
       this.charge = 0;
   }
@@ -1175,31 +1203,28 @@ class Tower {
     }
     return {dmg: buffDmg, spd: buffSpd};
   }
-  
+
   update(dt, enemies) {
-    if(this.def.type === 'support') return; 
+    if(this.def.type === 'support') return;
     const buffs = this.getNeighborBuffs();
     let spdMult = (1 + game.globalMult.spd) * buffs.spd;
     if(game.perks.overdrive) spdMult *= 2;
-    if(game.perks.startBoost > 0 && game.waveStartTime && Date.now() - game.waveStartTime < game.perks.startBoost * 1000) spdMult *= 2;
-    // Stats Calc
+    let boostTime = game.perks.startBoost;
+    if(saveData.unlocked.includes('core_start_boost')) boostTime += 2;
+    if(boostTime > 0 && game.waveStartTime && Date.now() - game.waveStartTime < boostTime * 1000) spdMult *= 2;
+
+    let isNightVision = game.activeEvents.some(e=>e.special==='night_vision');
     let range = this.def.range * (1 + game.globalMult.range + (this.tier-1)*0.1);
+    if(isNightVision && this.def.id !== 'sniper') range *= 0.6;
+
     let effectiveTier = this.tier + (game.globalMult.tierBonus || 0);
     let tierMult = Math.pow(1.5, effectiveTier - 1);
     let dmg = this.def.dmg * (1 + game.globalMult.dmg) * tierMult * buffs.dmg;
 
-    // EVENT MODIFIERS
-    const hasLaserOverload = game.activeEvents.some(e => e.id === 'laser_overload');
-    const hasRocketJam = game.activeEvents.some(e => e.id === 'rocket_jam');
-    if(this.def.id === 'laser' && hasLaserOverload) dmg *= 3.0;
-    if(this.def.id === 'rocket' && hasRocketJam) dmg *= 0.6;
-
-    // ADDITIVE CRITICAL (Diminishing returns)
     let isCrit = false;
     let critLevel = 0;
     let critChance = game.perks.crit;
-    let critMult = game.perks.critMult; 
-    
+    let critMult = game.perks.critMult;
     while(critChance > 0) {
         if(Math.random() < critChance) {
             isCrit = true;
@@ -1207,39 +1232,25 @@ class Tower {
         }
         critChance -= 1.0;
     }
-
-    if(isCrit) {
-        dmg *= (1 + (critLevel * (critMult - 1)));
-    }
-
-    /* --- ROCKET: RANGE SCALING --- */
-    if (this.def.id === 'rocket') {
-        dmg *= (range / 4.5);
-    }
+    if(isCrit) dmg *= (1 + (critLevel * (critMult - 1)));
 
     /* --- SNIPER SPECIAL LOGIC (CHARGE) --- */
     if (this.def.type === 'charge_shot') {
-        // CHARGE NERF: Less benefit from SPD
         const chargeTime = 4.0 / (1 + (spdMult - 1) * 0.5);
-        const targets = enemies.filter(e => e.alive && Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5)) < range);
+        const targets = enemies.filter(e => e.alive && Math.hypot(e.visualPos.x-(this.x+0.5), e.visualPos.y-(this.y+0.5)) < range);
         if (targets.length > 0) {
-            targets.sort((a,b) => {
-                const distA = Math.hypot(a.pos.x-(this.x+0.5), a.pos.y-(this.y+0.5));
-                const distB = Math.hypot(b.pos.x-(this.x+0.5), b.pos.y-(this.y+0.5));
-                return distB - distA; 
-            });
+            targets.sort((a,b) => b.progress - a.progress);
             const target = targets[0];
-            this.angle = Math.atan2(target.pos.y-(this.y+0.5), target.pos.x-(this.x+0.5));
-            this.targetRef = target; 
+            this.angle = Math.atan2(target.visualPos.y-(this.y+0.5), target.visualPos.x-(this.x+0.5));
+            this.targetRef = target;
 
             this.charge += dt;
             if(this.charge >= chargeTime) {
                 const chargeMult = 3.0 + (this.tier * 0.5);
                 let finalDmg = dmg * chargeMult;
-                if(game.augments.sniperMaxHpDmg) finalDmg += target.maxHp * game.augments.sniperMaxHpDmg;
-                this.applyHit(target, finalDmg, isCrit, critLevel);
+                this.applyHit(target, finalDmg, isCrit, critLevel, {isPiercing:true});
                 game.lasers.push({
-                    x1:this.x+0.5, y1:this.y+0.5, x2:target.pos.x, y2:target.pos.y,
+                    x1:this.x+0.5, y1:this.y+0.5, x2:target.visualPos.x, y2:target.visualPos.y,
                     color: isCrit ? '#fff' : '#00ff88', width: 3, life: 10
                 });
                 spawnParticles(this.x+0.5, this.y+0.5, '#00ff88', 10);
@@ -1257,101 +1268,85 @@ class Tower {
     if(fireRate < 0.05) fireRate = 0.05;
     this.cool -= dt;
     if(this.cool <= 0) {
-      if (this.def.type === 'pierce') {
-        const targets = enemies.filter(e => e.alive && Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5)) < range);
+      const isPiercing = this.def.type === 'pierce' || (this.def.id === 'sniper' && saveData.unlocked.includes('sniper_pierce'));
+      if (isPiercing) {
+        const targets = enemies.filter(e => e.alive && Math.hypot(e.visualPos.x-(this.x+0.5), e.visualPos.y-(this.y+0.5)) < range);
         if (targets.length > 0) {
            targets.sort((a,b) => b.progress - a.progress);
            const primary = targets[0];
-           this.angle = Math.atan2(primary.pos.y-(this.y+0.5), primary.pos.x-(this.x+0.5));
+           this.angle = Math.atan2(primary.visualPos.y-(this.y+0.5), primary.visualPos.x-(this.x+0.5));
            const hitList = this.getLineTargets(enemies, range, this.angle, this.def.pierce);
            hitList.forEach(e => {
              let finalDmg = dmg;
              if(this.def.id==='railgun') {
-                const dist = Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5));
+                const dist = Math.hypot(e.visualPos.x-(this.x+0.5), e.visualPos.y-(this.y+0.5));
                 finalDmg *= Math.min(2.0, 1.0 + (dist/range));
                 if(game.augments.railgunVuln) e.debuffs.vuln = 0.1;
-        
               }
              if(game.augments.laserMark && this.def.id==='laser') e.debuffs.mark = (e.debuffs.mark||0) + 0.15;
-             if(game.augments.beamIgnoreArmor && this.def.id==='beam') { e.armor = 0; e.shield = 0; }
-             this.applyHit(e, finalDmg, isCrit, critLevel);
+             this.applyHit(e, finalDmg, isCrit, critLevel, {isPiercing:true});
            });
            let width = isCrit ? 4 : 2;
            if(this.def.id==='laser' && game.augments.laserWidth) width *= 1.5;
            const furthest = hitList[hitList.length-1] || primary;
-           game.lasers.push({ x1:this.x+0.5, y1:this.y+0.5, x2:furthest.pos.x, y2:furthest.pos.y, color: isCrit ? '#fff' : this.def.color, width: width, life:5 });
+           game.lasers.push({ x1:this.x+0.5, y1:this.y+0.5, x2:furthest.visualPos.x, y2:furthest.visualPos.y, color: isCrit ? '#fff' : this.def.color, width: width, life:5 });
            if(game.augments.beamShockAoe && this.def.id==='beam') {
-               spawnParticles(furthest.pos.x, furthest.pos.y, '#8888ff', 5);
-               enemies.forEach(sub => { if(sub.alive && Math.hypot(sub.pos.x-furthest.pos.x, sub.pos.y-furthest.pos.y) < 2.0) sub.takeDmg(dmg * 0.5, false, 'beam_shock'); });
+               spawnParticles(furthest.visualPos.x, furthest.visualPos.y, '#8888ff', 5);
+               enemies.forEach(sub => { if(sub.alive && Math.hypot(sub.visualPos.x-furthest.visualPos.x, sub.visualPos.y-furthest.visualPos.y) < 2.0) sub.takeDmg(dmg * 0.5, false, 'beam_shock'); });
            }
            this.cool = fireRate;
         }
       } else {
-        const targets = enemies.filter(e => e.alive && Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5)) < range);
+        const targets = enemies.filter(e => e.alive && Math.hypot(e.visualPos.x-(this.x+0.5), e.visualPos.y-(this.y+0.5)) < range);
         if(targets.length > 0) {
           targets.sort((a,b) => b.progress - a.progress);
           const target = targets[0];
-          this.angle = Math.atan2(target.pos.y-(this.y+0.5), target.pos.x-(this.x+0.5));
+          this.angle = Math.atan2(target.visualPos.y-(this.y+0.5), target.visualPos.x-(this.x+0.5));
           if(this.def.type === 'aoe' || this.def.type === 'aoe_prox') {
             let aoeRadius = 1.8;
-            if (this.def.id === 'rocket') { aoeRadius = 2.2; if(game.augments.rocketAoe) aoeRadius *= 1.1;
-            }
-            if (this.def.id === 'blaster') { if(game.augments.blasterAoe) aoeRadius *= 1.1;
-              if(game.augments.blasterAoeMult) aoeRadius *= game.augments.blasterAoeMult; }
+            if (this.def.id === 'rocket') { aoeRadius = 2.2; if(game.augments.rocketAoe) aoeRadius *= 1.1; }
+            if (this.def.id === 'blaster') { if(game.augments.blasterAoe) aoeRadius *= 1.1; if(game.augments.blasterAoeMult) aoeRadius *= game.augments.blasterAoeMult; }
             targets.forEach(e => {
-              const dist = Math.hypot(e.pos.x-target.pos.x, e.pos.y-target.pos.y);
+              const dist = Math.hypot(e.visualPos.x-target.visualPos.x, e.visualPos.y-target.visualPos.y);
               if(dist < aoeRadius) {
                   let finalDmg = dmg;
                   if(this.def.type === 'aoe_prox') {
-     
-                      const towerDist = Math.hypot(e.pos.x-(this.x+0.5), e.pos.y-(this.y+0.5));
+                      const towerDist = Math.hypot(e.visualPos.x-(this.x+0.5), e.visualPos.y-(this.y+0.5));
                       let prox = Math.max(0, 1.0 - (towerDist / range));
                       if(game.augments.blasterProx) prox += 0.2;
-                      finalDmg = 
-                        dmg * (1.0 + prox); 
+                      finalDmg = dmg * (1.0 + prox);
                       if(game.augments.blasterSlow) e.debuffs.slow = 0.1;
                   }
-                  
-                  // Blaster Special: 1.5x vs Heavy
-                  if(this.def.id === 'blaster' && this.tier >= 3) {
-                      if(['tank','boss','elite','monolith'].includes(e.type)) finalDmg *= 1.5;
-                  }
-
+                  if(this.def.id === 'blaster' && this.tier >= 3 && ['tank','boss','elite','monolith'].includes(e.type)) finalDmg *= 1.5;
                   this.applyHit(e, finalDmg, isCrit, critLevel);
               }
-        
             });
-            spawnParticles(target.pos.x, target.pos.y, this.def.color, 8);
+            spawnParticles(target.visualPos.x, target.visualPos.y, this.def.color, 8);
           } else {
-            let finalDmg = dmg;
-            if(this.def.id==='sniper' && game.augments.sniperMaxHpDmg) finalDmg += target.maxHp * game.augments.sniperMaxHpDmg;
-            
-            this.applyHit(target, finalDmg, isCrit, critLevel);
-            // Beam Special: Slow
+            this.applyHit(target, dmg, isCrit, critLevel);
             if(this.def.id === 'beam' && this.tier >= 3) target.debuffs.slow = Math.max(target.debuffs.slow || 0, 0.1);
-            if(isCrit) spawnParticles(target.pos.x, target.pos.y, '#fff', 4);
+            if(isCrit) spawnParticles(target.visualPos.x, target.visualPos.y, '#fff', 4);
           }
-          game.lasers.push({ x1:this.x+0.5, y1:this.y+0.5, x2:target.pos.x, y2:target.pos.y, color: isCrit ? '#fff' : this.def.color, width: isCrit ? 4 : 2, life:5 });
-          if(this.def.id==='rocket' && game.augments.rocketSplit) { if(targets.length > 1) this.applyHit(targets[1], dmg*0.5, isCrit, critLevel);
-          }
+          game.lasers.push({ x1:this.x+0.5, y1:this.y+0.5, x2:target.visualPos.x, y2:target.visualPos.y, color: isCrit ? '#fff' : this.def.color, width: isCrit ? 4 : 2, life:5 });
+          if(this.def.id==='rocket' && game.augments.rocketSplit && targets.length > 1) this.applyHit(targets[1], dmg*0.5, isCrit, critLevel);
           this.cool = fireRate;
         }
       }
     }
   }
-  applyHit(e, dmg, isCrit, critLevel=0) {
-      e.takeDmg(dmg, isCrit, this.def.id, critLevel);
-      spawnParticles(e.pos.x, e.pos.y, '#fff', 4);
-      if(game.perks.doubleHit > 0 && Math.random() < game.perks.doubleHit) { setTimeout(() => { if(e.alive) { e.takeDmg(dmg, isCrit, this.def.id, critLevel); spawnParticles(e.pos.x, e.pos.y, '#00ffff', 4); }}, 100);
+  applyHit(e, dmg, isCrit, critLevel=0, options) {
+      e.takeDmg(dmg, isCrit, this.def.id, critLevel, options);
+      spawnParticles(e.visualPos.x, e.visualPos.y, '#fff', 2);
+      if(game.perks.doubleHit > 0 && Math.random() < game.perks.doubleHit) { setTimeout(() => { if(e.alive) { e.takeDmg(dmg, isCrit, this.def.id, critLevel, options); spawnParticles(e.visualPos.x, e.visualPos.y, '#00ffff', 4); }}, 100);
       }
   }
   getLineTargets(enemies, range, angle, maxHits) {
     const hits = [];
     const tx = this.x+0.5, ty = this.y+0.5; const dx = Math.cos(angle), dy = Math.sin(angle);
-    const candidates = enemies.filter(e => e.alive).map(e => { return {e:e, dist: Math.hypot(e.pos.x-tx, e.pos.y-ty)}; }).sort((a,b) => a.dist - b.dist);
+    const candidates = enemies.filter(e => e.alive).map(e => { return {e:e, dist: Math.hypot(e.visualPos.x-tx, e.visualPos.y-ty)}; }).sort((a,b) => a.dist - b.dist);
     for(let c of candidates) {
         if(c.dist > range) continue;
-        const ex = c.e.pos.x, ey = c.e.pos.y;
+        const ex = c.e.visualPos.x, ey = c.e.visualPos.y;
         const dot = (ex-tx)*dx + (ey-ty)*dy;
         if (dot < 0) continue;
         const perpDist = Math.abs((ex-tx)*(-dy) + (ey-ty)*dx);
@@ -1368,8 +1363,7 @@ function generatePath() {
   while(x < GRID_W) {
     p.push({x,y}); x++;
     if(x<GRID_W && Math.random()<0.45) {
-      let dy = Math.random()<0.5 ?
-        -1 : 1;
+      let dy = Math.random()<0.5 ? -1 : 1;
       if(y+dy>1 && y+dy<GRID_H-2) { p.push({x,y}); y+=dy; p.push({x,y}); y+=dy;
       }
     }
@@ -1389,29 +1383,52 @@ function generateObstacles() {
 }
 function triggerWave() {
   if(game.state !== 'idle') return;
+
+  if (game.wave > 0) {
+    let interestRate = 0.03 + game.perks.interest;
+    let bonus = Math.floor(game.gold * interestRate);
+    let cap = game.perks.interestCap !== undefined ? game.perks.interestCap : 99999;
+    let finalInterest = Math.min(bonus, cap);
+    if(finalInterest > 0) {
+        game.gold += finalInterest;
+        log(`INTEREST: +${finalInterest} CR (Rate:${(interestRate*100).toFixed(1)}%)`);
+    }
+  }
+
   game.lifeAtWaveStart = game.life;
   game.state = 'playing';
   game.wave++;
   game.waveStartTime = Date.now();
   document.getElementById('nextWaveBtn').disabled = true;
-  selectDef = null; selectedTower = null; 
+  selectDef = null; selectedTower = null;
   renderShop();
   if(game.perks.waveStartGold) game.gold += game.perks.waveStartGold;
 
-  // Events Duration Management
-  game.activeEvents.forEach(e => e.duration--);
+  // Event Duration & Effect Management
+  game.activeEvents.forEach(e => {
+    e.duration--;
+    if(e.duration <= 0 && e.onEnd) game.enemies.forEach(enemy => e.onEnd(enemy));
+  });
   game.activeEvents = game.activeEvents.filter(e => e.duration > 0);
 
+  if (Math.random() < 0.2 && game.wave > 1) {
+      const availableEvents = WAVE_EVENTS.filter(ev => !game.activeEvents.some(ae => ae.id === ev.id));
+      if (availableEvents.length > 0) {
+          const ev = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+          const newEvent = {...ev};
+          game.activeEvents.push(newEvent);
+          if (newEvent.onStart) game.enemies.forEach(e => newEvent.onStart(e));
+          log(`ANOMALY DETECTED: ${newEvent.name}`);
+      }
+  }
+
   const isBossWave = (game.wave % 10 === 0);
-  let count = isBossWave ?
-    1 : (5 + Math.floor(game.wave * 1.8));
-  game.enemiesToSpawn = count; 
+  let count = isBossWave ? 1 : (5 + Math.floor(game.wave * 1.8));
+  game.enemiesToSpawn = count;
   game.enemiesSpawned = 0;
-  
-  game.spawnInterval = isBossWave ?
-    1.0 : Math.max(0.2, 0.8 - game.wave*0.03); 
+  game.spawnInterval = isBossWave ? 1.0 : Math.max(0.2, 0.8 - game.wave*0.03);
   game.spawnTimer = 0;
-  
+
   if (isBossWave) log(`WARNING: BOSS DETECTED`);
 }
 
@@ -1429,8 +1446,11 @@ function grantBossReward() {
     let rarityIdx = 2; // Rare
     if(Math.random() < 0.3) rarityIdx = 3;
     if(Math.random() < 0.05) rarityIdx = 4;
-    const type = ARTIFACT_TYPES[Math.floor(Math.random() * ARTIFACT_TYPES.length)];
-    const u = { typeId: type.id, rarityIdx: rarityIdx, name: type.name, baseDesc: type.desc, fn: type.fn, val: type.val };
+
+    let pool = [...BASE_ARTIFACTS, ...UNIQUE_ARTIFACTS];
+    const type = pool[Math.floor(Math.random() * pool.length)];
+
+    const u = { typeId: type.id, rarityIdx: type.rarityIdx || rarityIdx, name: type.name, baseDesc: type.desc, fn: type.fn, val: type.val };
     log(`BOSS DEFEATED! DROP: ${type.name}`);
     addArtifactRecursive(u);
 }
@@ -1438,62 +1458,47 @@ function grantBossReward() {
 function waveComplete(failed) {
   if(failed) {
       log("INTEGRITY LOST. RETRYING...");
-      // Flash Red Effect
       const overlay = document.getElementById('retryOverlay');
       overlay.classList.remove('hidden');
       setTimeout(() => { overlay.classList.add('hidden'); }, 1000);
       if(game.life <= 0) { gameOver(); return; }
-      
+
       game.state = 'idle';
       game.wave--; game.enemies = []; game.particles = []; game.lasers = [];
       document.getElementById('nextWaveBtn').disabled = false;
       updateHUD(); return;
   }
 
-  // EVENT TRIGGER CHECK (20%)
-  if (Math.random() < 0.2) {
-      const ev = WAVE_EVENTS[Math.floor(Math.random() * WAVE_EVENTS.length)];
-      game.activeEvents.push({...ev});
-      log(`ANOMALY DETECTED: ${ev.name}`);
-  }
-  
-  const lockedTowers = TOWERS.filter(t => !t.unlocked && t.id !== 'laser');
-  let bpChance = 0.3 + (game.perks.blueprintChance || 0);
-  
-  let interestRate = 0.03 + game.perks.interest;
-  let bonus = Math.floor(game.gold * interestRate);
-  let cap = Math.floor(game.gold * 0.05);
-  let finalInterest = Math.min(bonus, cap);
-  if(finalInterest > 0) { 
-      game.gold += finalInterest; 
-      log(`INTEREST: +${finalInterest} CR (Rate:${(interestRate*100).toFixed(1)}% Cap:5%)`);
-  }
+  if(game.perks.cfGain > 0) { saveData.cf += game.perks.cfGain; saveGame(); log(`CF ACQUIRED: +${game.perks.cfGain}`); }
 
-  if(game.bossKillBonusWave === game.wave) {
-      game.bossKillBonusWave = -1;
-  }
+  if(game.bossKillBonusWave === game.wave) game.bossKillBonusWave = -1;
 
-  if(game.perks.cfGain > 0) { saveData.cf += game.perks.cfGain; log(`CF ACQUIRED: +${game.perks.cfGain}`); }
-  game.state = 'drafting'; showDraftScreen();
+  if (game.wave % 4 === 0) {
+      game.state = 'drafting';
+      showDraftScreen();
+  } else {
+      game.state = 'idle';
+      document.getElementById('nextWaveBtn').disabled = false;
+      if(document.getElementById('autoStartCheck').checked) setTimeout(triggerWave, 500);
+  }
 }
 
 function gameOver() {
   game.state = 'over';
-  const cfEarned = Math.round(game.wave * 0.25);
+  const cfEarned = Math.round(game.wave * 0.25 * (1 + (game.perks.cfGain||0)));
   saveData.cf += cfEarned;
   saveGame();
-  
-  // Game Over Overlay Display
+
   document.getElementById('gameOverOverlay').classList.remove('hidden');
   document.getElementById('goWave').innerText = game.wave;
   document.getElementById('goCf').innerText = cfEarned;
 }
 
 function update() {
-  if(game.paused) return; 
+  if(!game || game.paused) return;
 
   const dtBase = 0.016;
-  const dt = dtBase * game.speed; 
+  const dt = dtBase * game.speed;
 
   const now = Date.now();
   if(now - game.lastDpsUpdate > 1000) {
@@ -1511,17 +1516,19 @@ function update() {
         game.spawnTimer -= dt;
         if(game.spawnTimer <= 0) {
             let type = 'normal';
+            const rand = Math.random();
             if (game.wave % 10 === 0) type = 'boss';
-            else {
-                const rand = Math.random();
-                if (game.wave >= 3 && rand < 0.1) type = 'shield';
-                else if (game.wave >= 5 && rand < 0.2) type = 'phase';
-                else if (game.wave >= 8 && rand < 0.3) type = 'ghost';
-                else if (game.wave >= 12 && rand < 0.35) type = 'tank';
-                else if (game.wave >= 15 && rand < 0.4) type = 'elite';
-                else if (game.wave >= 20 && rand < 0.05) type = 'monolith';
-            }
-            game.enemies.push(new Enemy(game.path, game.wave, type));
+            else if (game.wave >= 20 && rand < 0.05) type = 'monolith';
+            else if (game.wave >= 15 && rand < 0.20) type = 'elite';
+            else if (game.wave >= 12 && rand < 0.20) type = 'tank';
+            else if (game.wave >= 8 && rand < 0.20) type = 'ghost';
+            else if (game.wave >= 5 && rand < 0.20) type = 'phase';
+
+            const newEnemy = new Enemy(game.path, game.wave, type);
+            game.activeEvents.forEach(ev => {
+                if(ev.onStart) ev.onStart(newEnemy);
+            });
+            game.enemies.push(newEnemy);
             game.enemiesSpawned++;
             game.spawnTimer = game.spawnInterval;
         }
@@ -1534,11 +1541,10 @@ function update() {
         if(e.reached) { game.life--; if(game.life <= 0) gameOver(); }
         if(e.killed) {
             let bounty = 6 + game.wave * 0.5;
-            if(e.type === 'boss') bounty *= 5; if(e.type === 'shield') bounty *= 1.5;
-            if(e.type === 'tank') bounty *= 2; if(e.type === 'elite') bounty *= 
-                3;
-            if(e.type === 'monolith') bounty *= 10;
-            if(game.bossKillBonusWave === game.wave) bounty *= 2;
+            if(e.type === 'boss') bounty *= 5; if(e.type === 'tank') bounty *= 2; if(e.type === 'elite') bounty *= 3; if(e.type === 'monolith') bounty *= 10;
+
+            if(game.bossKillBonusWave === game.wave || game.activeEvents.some(ev => ev.special === 'gold_rush')) bounty *= 2;
+            if(game.activeEvents.some(ev => ev.special === 'hyper_bounty')) bounty *= 3;
 
             game.gold += Math.floor(bounty);
         }
@@ -1549,8 +1555,8 @@ function update() {
        setTimeout(() => {
          if(game.state === 'playing' && game.enemies.length === 0) {
              if(game.life <= 0) gameOver();
-             else if(game.life < game.lifeAtWaveStart) waveComplete(true); 
-             else waveComplete(false); 
+             else if(game.life < game.lifeAtWaveStart) waveComplete(true);
+             else waveComplete(false);
          }
        }, 500);
     }
@@ -1567,11 +1573,16 @@ function loop() {
 }
 
 function draw() {
+  if(!game) return;
   ctx.fillStyle = '#070b1a'; ctx.fillRect(0,0,canvas.width,canvas.height);
   const offX = (canvas.width - GRID_W*TILE)/2;
   const offY = (canvas.height - GRID_H*TILE)/2;
   ctx.save(); ctx.translate(offX, offY);
-  
+
+  if (game.activeEvents.some(e=>e.special==='night_vision')) {
+      ctx.fillStyle = 'rgba(0,0,0,0.9)'; ctx.fillRect(-offX, -offY, canvas.width, canvas.height);
+  }
+
   ctx.fillStyle = '#0f1724'; game.path.forEach(p => ctx.fillRect(p.x*TILE, p.y*TILE, TILE, TILE));
   ctx.fillStyle = '#1a1010'; ctx.strokeStyle = '#331111';
   game.blocked.forEach(b => { ctx.fillRect(b.x*TILE, b.y*TILE, TILE, TILE); ctx.strokeRect(b.x*TILE, b.y*TILE, TILE, TILE); });
@@ -1580,53 +1591,50 @@ function draw() {
   game.towers.forEach(t => {
     ctx.fillStyle = t.def.color;
     if(t.def.type === 'support') {
-         ctx.strokeStyle = t.def.color; ctx.lineWidth = 2; 
+         ctx.strokeStyle = t.def.color; ctx.lineWidth = 2;
          ctx.strokeRect((t.x+0.5)*TILE - TILE*0.35, (t.y+0.5)*TILE - TILE*0.35, TILE*0.7, TILE*0.7);
          ctx.font = "bold 10px sans-serif"; ctx.textAlign="center"; ctx.fillStyle=t.def.color;
          ctx.fillText("BUFF", (t.x+0.5)*TILE, (t.y+0.55)*TILE);
     } else {
          ctx.fillRect((t.x+0.5)*TILE - TILE*0.35, (t.y+0.5)*TILE - TILE*0.35, TILE*0.7, TILE*0.7);
-      
          ctx.save(); ctx.translate((t.x+0.5)*TILE, (t.y+0.5)*TILE); ctx.rotate(t.angle); ctx.fillStyle = '#eee'; ctx.fillRect(0, -2, TILE*0.5, 4); ctx.restore();
     }
     ctx.fillStyle = "rgba(0,0,0,0.7)"; ctx.fillRect((t.x+0.45)*TILE, (t.y+0.6)*TILE, TILE*0.5, TILE*0.35);
     ctx.fillStyle = '#fff'; ctx.font = "bold " + (TILE*0.25) + "px sans-serif"; ctx.textAlign = "center"; ctx.fillText("Lv."+t.tier, (t.x+0.7)*TILE, (t.y+0.85)*TILE);
     if(selectedTower === t) { ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2; ctx.strokeRect(t.x*TILE, t.y*TILE, TILE, TILE); }
-    
+
     if(t.def.type === 'charge_shot' && t.charge > 0) {
         const cPct = Math.min(1, t.charge / 2.0);
         ctx.fillStyle = '#0f0'; ctx.fillRect((t.x+0.1)*TILE, (t.y+0.1)*TILE, TILE*0.8*cPct, 3);
         if(t.targetRef && t.targetRef.alive) {
             ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
             ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo((t.x+0.5)*TILE, (t.y+0.5)*TILE); ctx.lineTo(t.targetRef.pos.x*TILE, t.targetRef.pos.y*TILE); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo((t.x+0.5)*TILE, (t.y+0.5)*TILE); ctx.lineTo(t.targetRef.visualPos.x*TILE, t.targetRef.visualPos.y*TILE); ctx.stroke();
         }
     }
   });
   game.enemies.forEach(e => {
     let color = '#ff4d4d'; let size = TILE*0.3;
-    if (e.type === 'shield') color = '#2ee6ff';
     if (e.type === 'boss') { color = '#ff0000'; size = TILE*0.5; }
-    if (e.type === 'phase') color = '#d000ff';
-    if (e.type === 'ghost') color = '#ffffff';
     if (e.type === 'tank') { color = '#558855'; size = TILE*0.45; }
     if (e.type === 'elite') color = '#ffff00';
     if (e.type === 'monolith') { color = '#333333'; size = TILE*0.6; }
 
-  
-    ctx.save(); if (e.type === 'ghost') ctx.globalAlpha = 0.4;
-    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(e.pos.x*TILE, e.pos.y*TILE, size, 0, Math.PI*2); ctx.fill();
-    if(e.shield > 0) { ctx.strokeStyle = '#2ee6ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.pos.x*TILE, e.pos.y*TILE, size + 4, 0, Math.PI*2); ctx.stroke(); }
-    
-    if(e.type === 'monolith') { ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.pos.x*TILE, e.pos.y*TILE, size, 0, Math.PI*2); ctx.stroke(); }
+    ctx.save();
+    const isAnomalyRift = game.activeEvents.some(ev=>ev.special==='anomaly_rift');
+    if (isAnomalyRift) ctx.globalAlpha = 0.5 + Math.sin(Date.now() / 100 + e.progress) * 0.5;
 
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(e.visualPos.x*TILE, e.visualPos.y*TILE, size, 0, Math.PI*2); ctx.fill();
+    if(e.armor > 0) { ctx.strokeStyle = '#aaa'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(e.visualPos.x*TILE, e.visualPos.y*TILE, size + 4, 0, Math.PI*2); ctx.stroke(); }
+    if(e.type === 'monolith') { ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(e.visualPos.x*TILE, e.visualPos.y*TILE, size, 0, Math.PI*2); ctx.stroke(); }
     ctx.restore();
-    const hp = Math.max(0, e.hp/e.maxHp); const barY = e.pos.y*TILE-12 - (e.type==='boss'?10:0); const barX = e.pos.x*TILE-10;
+    const hp = Math.max(0, e.hp/e.maxHp); const barY = e.visualPos.y*TILE-12 - (e.type==='boss'?10:0); const barX = e.visualPos.x*TILE-10;
     ctx.fillStyle = '#000';
     ctx.fillRect(barX-1, barY-1, 22, 5); ctx.fillStyle = '#500'; ctx.fillRect(barX, barY, 20, 3); ctx.fillStyle = '#f00'; ctx.fillRect(barX, barY, 20*hp, 3);
   });
   game.lasers.forEach(l => { ctx.strokeStyle = l.color; ctx.lineWidth = l.width || 2; ctx.globalAlpha = l.life/5; ctx.beginPath(); ctx.moveTo(l.x1*TILE, l.y1*TILE); ctx.lineTo(l.x2*TILE, l.y2*TILE); ctx.stroke(); });
+  ctx.globalAlpha = 1;
   game.particles.forEach(p => p.draw(ctx, TILE));
   game.dmgTexts.forEach(d => d.draw(ctx, TILE));
 
@@ -1634,13 +1642,16 @@ function draw() {
     const gx = Math.floor((mousePos.x - offX)/TILE);
     const gy = Math.floor((mousePos.y - offY)/TILE);
     if(gx>=0 && gx<GRID_W && gy>=0 && gy<GRID_H) {
-        const isBlocked = game.blocked.some(b => b.x===gx && b.y===gy);
+        const isBlocked = game.path.some(p => p.x===gx && p.y===gy) || game.blocked.some(b => b.x===gx && b.y===gy) || game.towers.some(t=>t.x===gx && t.y===gy);
         ctx.strokeStyle = isBlocked ? '#f00' : selectDef.color; ctx.lineWidth = 2; ctx.strokeRect(gx*TILE, gy*TILE, TILE, TILE);
         if(!isBlocked) {
+            let range = selectDef.range * TILE * (1+game.globalMult.range);
+            if (game.activeEvents.some(e=>e.special==='night_vision') && selectDef.id !== 'sniper') range *= 0.6;
+
             if(selectDef.type === 'support') { ctx.fillStyle = selectDef.color;
-              ctx.globalAlpha=0.2; ctx.fillRect((gx-1)*TILE, (gy-1)*TILE, TILE*3, TILE*3); } 
+              ctx.globalAlpha=0.2; ctx.fillRect((gx-1)*TILE, (gy-1)*TILE, TILE*3, TILE*3); }
             else { ctx.beginPath();
-              ctx.arc((gx+0.5)*TILE, (gy+0.5)*TILE, selectDef.range*TILE*(1+game.globalMult.range), 0, Math.PI*2); ctx.fillStyle = selectDef.color; ctx.globalAlpha=0.1; ctx.fill();
+              ctx.arc((gx+0.5)*TILE, (gy+0.5)*TILE, range, 0, Math.PI*2); ctx.fillStyle = selectDef.color; ctx.globalAlpha=0.1; ctx.fill();
             }
             ctx.globalAlpha=1;
         }
@@ -1650,42 +1661,39 @@ function draw() {
 }
 
 /* --- UI HELPERS --- */
-function spawnParticles(x, y, c, n) { for(let i=0; i<n; i++) game.particles.push(new Particle(x,y,c));
+function spawnParticles(x, y, c, n, life=1.0) { for(let i=0; i<n; i++) game.particles.push(new Particle(x,y,c, 0.2, life));
 }
 function log(m) { const l = document.getElementById('logContent'); const d = document.createElement('div'); d.className = 'log-entry'; d.innerText = `> ${m}`; l.prepend(d);
 }
 function updateHUD() {
+  if (!game) return;
   document.getElementById('gold').innerText = Math.floor(game.gold);
   document.getElementById('life').innerText = game.life + " / " + game.maxLife;
   document.getElementById('wave').innerText = game.wave;
-  // GOLD RUSH INDICATOR
+
   const rushOverlay = document.getElementById('goldRushOverlay');
-  if(game.bossKillBonusWave === game.wave) rushOverlay.classList.remove('hidden');
+  if(game.bossKillBonusWave === game.wave || game.activeEvents.some(e=>e.special==='gold_rush')) rushOverlay.classList.remove('hidden');
   else rushOverlay.classList.add('hidden');
-  
-  // EVENT HUD UPDATE
+
   const eventHud = document.getElementById('eventHud');
   eventHud.innerHTML = '';
   game.activeEvents.forEach(ev => {
       const el = document.createElement('div');
-      el.className = `event-tag ${ev.type === 'nerf' ? 'nerf' : ''}`;
+      el.className = `event-tag ${ev.type}`;
       el.innerText = `${ev.name} [${ev.duration}]`;
+      el.onmouseenter = (e) => showTooltip(e, ev.desc);
+      el.onmouseleave = hideTooltip;
       eventHud.appendChild(el);
   });
 
-  // BOSS HUD UPDATE FIX
   const bosses = game.enemies.filter(e => e.type === 'boss' && e.alive);
   const hud = document.getElementById('bossHud');
   if(bosses.length > 0) {
-      bosses.sort((a,b) => b.progress - a.progress);
       const boss = bosses[0];
       hud.classList.remove('hidden');
       const pct = Math.max(0, (boss.hp / boss.maxHp) * 100);
-      const fill = document.getElementById('bossBarFill');
-      const val = document.getElementById('bossHpVal');
-      // Force update styles
-      fill.style.width = pct + "%";
-      val.innerText = Math.ceil(boss.hp) + " / " + Math.ceil(boss.maxHp);
+      document.getElementById('bossBarFill').style.width = pct + "%";
+      document.getElementById('bossHpVal').innerText = Math.ceil(boss.hp) + " / " + Math.ceil(boss.maxHp);
   } else {
       hud.classList.add('hidden');
   }
@@ -1699,81 +1707,67 @@ function updateDpsUI() {
     }
     sorted.forEach(([k, v]) => {
         const pct = total > 0 ? (v / total) * 100 : 0;
-        const color = TOWERS.find(t=>t.id===k).color;
+        const def = TOWERS.find(t=>t.id===k);
+        if(!def) return;
+        const color = def.color;
         const row = document.createElement('div'); row.className = 'dps-row';
         row.innerHTML = `<div class="dps-name" style="color:${color}">${k.toUpperCase().substring(0,4)}</div><div class="dps-bar-bg"><div class="dps-bar-fill" style="width:${pct}%; background:${color}"></div></div><div class="dps-val">${Math.floor(v)}</div>`;
         list.appendChild(row);
     });
 }
 function showDraftScreen() {
-  renderCurrentStats('draftStats'); // Show stats in draft
+  renderCurrentStats('draftStats');
   const modal = document.getElementById('modalOverlay'); const container = document.getElementById('cards');
   document.getElementById('modalTitle').innerText = "WAVE CLEARED"; document.getElementById('modalSubtitle').innerText = "Select Artifact";
   container.innerHTML = ''; modal.classList.remove('hidden');
-  let choicesCount = 3 + (game.perks.draftChoices || 0);
-  let pool = [...ARTIFACT_TYPES];
-  
-  const lockedTowers = TOWERS.filter(t => !t.unlocked && t.id !== 'laser');
-  const isUnlockWave = (game.wave % 5 === 0);
-  let bpAdded = false;
-  
-  // Event Modifier for Mythic Chance
-  let currentMythicChance = game.perks.mythicChance;
-  if(game.activeEvents.some(e => e.id === 'mythic_res')) currentMythicChance += 0.20;
+  let choicesCount = 3 + (saveData.unlocked.includes('art_draft_plus') ? 1 : 0);
+
+  let currentMythicChance = game.perks.mythicChance + (saveData.unlocked.includes('art_mythic_chance_plus') ? 0.0005 : 0) + (saveData.unlocked.includes('art_mythic_plus_big') ? 0.001 : 0);
+  if(game.activeEvents.some(e => e.special === 'mythic_chance_up')) currentMythicChance += 0.20;
 
   for(let i=0; i<choicesCount; i++) {
-    if(isUnlockWave && !bpAdded && lockedTowers.length > 0) {
-        const t = lockedTowers[Math.floor(Math.random() * lockedTowers.length)];
-        const u = { typeId: `bp_${t.id}`, rarityIdx: 4, name: `BP: ${t.name}`, baseDesc: `Unlock ${t.name}`, rarity:'legendary', isBlueprint:true, target:t };
-        createCard(container, u, 4);
-        bpAdded = true;
-        continue;
-    }
-
     let rarityIdx = 0; const r = Math.random();
-    if(r < currentMythicChance) rarityIdx = 5; 
-    else if(r < 0.05 + (game.perks.rarityRare||0)) rarityIdx = 2;
-    else if(r < 0.25 + (game.perks.rarityUncommon||0)) rarityIdx = 1;
-    
-    if(rarityIdx === 5) { 
-        const availableMythics = MYTHICS.filter(m => !game.mythicHistory.includes(m.id));
+    if(r < currentMythicChance && MYTHICS.some(m => !game.mythicHistory.has(m.id))) rarityIdx = 5;
+    else if(r < 0.08 + (saveData.unlocked.includes('art_rare_up') ? 0.05 : 0)) rarityIdx = 2;
+    else if(r < 0.35 + (saveData.unlocked.includes('art_uncommon_up') ? 0.05 : 0) - (saveData.unlocked.includes('art_common_down') ? 0.05 : 0)) rarityIdx = 1;
+
+    if(rarityIdx === 5) {
+        const availableMythics = MYTHICS.filter(m => !game.mythicHistory.has(m.id));
         if(availableMythics.length > 0) {
             const m = availableMythics[Math.floor(Math.random() * availableMythics.length)];
-            createCard(container, m, 5);
+            createCard(container, {...m, rarityIdx: 5}, 5);
         } else {
-            rarityIdx = 4;
-            const type = pool[Math.floor(Math.random()*pool.length)]; 
-            const u = { typeId:type.id, rarityIdx:rarityIdx, name:type.name, baseDesc:type.desc, fn:type.fn, val:type.val }; 
-            createCard(container, u, rarityIdx);
+             const type = ARTIFACT_TYPES[Math.floor(Math.random()*ARTIFACT_TYPES.length)];
+             const u = { typeId:type.id, rarityIdx:4, name:type.name, baseDesc:type.desc, fn:type.fn, val:type.val };
+             createCard(container, u, 4);
         }
-    } 
-    else { 
+    }
+    else {
+        let pool = rarityIdx === 2 ? [...BASE_ARTIFACTS, ...UNIQUE_ARTIFACTS] : BASE_ARTIFACTS;
         const type = pool[Math.floor(Math.random()*pool.length)];
-        const u = { typeId:type.id, rarityIdx:rarityIdx, name:type.name, baseDesc:type.desc, fn:type.fn, val:type.val }; 
+        const u = { typeId:type.id, rarityIdx: rarityIdx, name:type.name, baseDesc:type.desc, fn:type.fn, val:type.val };
         createCard(container, u, rarityIdx);
     }
   }
 }
 function createCard(container, u, rarityIdx) {
     const el = document.createElement('div');
-    const rName = rarityIdx === 5 ? 'mythic' : RARITIES[rarityIdx]; el.className = `card ${rName}`;
+    const rName = RARITIES[rarityIdx]; el.className = `card ${rName}`;
     let html = `<h4>${u.name}</h4>`;
-    if(rarityIdx===5 || u.isBlueprint) html += `<p>${u.baseDesc || u.desc}</p>`; else { const val = u.val[rarityIdx];
-    html += `<p>${u.baseDesc.replace('[X]', val)}</p><p style="font-size:0.65rem; color:#666; margin-top:5px;">Collect 3 to Upgrade</p>`; }
+    if(u.val) html += `<p>${u.baseDesc.replace('[X]', u.val[rarityIdx])}</p><p style="font-size:0.65rem; color:#666; margin-top:5px;">Collect 3 to Synthesize</p>`;
+    else html += `<p>${u.desc || u.baseDesc}</p>`;
     el.innerHTML = html;
     el.onclick = () => {
-        if(u.isBlueprint) {
-            u.target.unlocked = true;
-            log(`BLUEPRINT: ${u.target.name} UNLOCKED`);
-            renderShop();
-        }
-        else if(rarityIdx===5) { 
+        if(u.rarity === 'mythic') {
             u.fn(game);
-            game.artifacts.push({...u, rarity:'mythic'}); 
-            game.mythicHistory.push(u.typeId); // Track ID
+            game.artifacts.push({...u, rarity:'mythic', id: u.id, desc: u.desc});
+            game.mythicHistory.add(u.id);
             log(`MYTHIC: ${u.name}`);
         } else addArtifactRecursive(u);
-        document.getElementById('modalOverlay').classList.add('hidden'); renderArtifacts(); game.state = 'idle'; document.getElementById('nextWaveBtn').disabled = false;
+        document.getElementById('modalOverlay').classList.add('hidden');
+        renderArtifacts();
+        game.state = 'idle';
+        document.getElementById('nextWaveBtn').disabled = false;
         if(document.getElementById('autoStartCheck').checked) setTimeout(triggerWave, 500);
     };
     container.appendChild(el);
@@ -1781,27 +1775,46 @@ function createCard(container, u, rarityIdx) {
 function addArtifactRecursive(u) {
     const others = game.artifacts.filter(a => a.typeId === u.typeId && a.rarityIdx === u.rarityIdx);
     if(others.length >= 2) {
-        game.artifacts = game.artifacts.filter((a,i) => { if(a.typeId === u.typeId && a.rarityIdx === u.rarityIdx && others.indexOf(a) < 2) return false; return true; });
-        if(u.rarityIdx + 1 < RARITIES.length) { log(`SYNTHESIS: ${u.name} -> ${RARITIES[u.rarityIdx+1]}`); const nextU = { ...u, rarityIdx: u.rarityIdx + 1 };
-        addArtifactRecursive(nextU); } 
-        else { applyArtifactStats(u); game.artifacts.push(createArtifactData(u));
+        let count = 0;
+        game.artifacts = game.artifacts.filter(a => {
+            if(a.typeId === u.typeId && a.rarityIdx === u.rarityIdx && count < 2) {
+                count++; return false;
+            }
+            return true;
+        });
+        if(u.rarityIdx + 1 < RARITIES.length-1) { // Stop before mythic
+             log(`SYNTHESIS: ${u.name} -> ${RARITIES[u.rarityIdx+1]}`);
+             const nextU = { ...u, rarityIdx: u.rarityIdx + 1 };
+             addArtifactRecursive(nextU);
+        } else { // Reached legendary
+            applyArtifactStats(u); game.artifacts.push(createArtifactData(u));
         }
     } else { applyArtifactStats(u); game.artifacts.push(createArtifactData(u)); log(`OBTAINED: ${u.name} (${RARITIES[u.rarityIdx]})`); }
 }
-function applyArtifactStats(u) { u.fn(game, u.val[u.rarityIdx]);
+function applyArtifactStats(u) {
+    if(u.fn && u.val) u.fn(game, u.val[u.rarityIdx]);
+    else if(u.fn) u.fn(game);
 }
-function createArtifactData(u) { return {typeId:u.typeId, rarityIdx:u.rarityIdx, rarity:RARITIES[u.rarityIdx], name:u.name, desc:u.baseDesc.replace('[X]', u.val[u.rarityIdx])}; }
+function createArtifactData(u) {
+    return {typeId:u.typeId, rarityIdx:u.rarityIdx, rarity:RARITIES[u.rarityIdx], name:u.name, desc: u.val ? u.baseDesc.replace('[X]', u.val[u.rarityIdx]) : (u.desc || u.baseDesc)};
+}
 function renderArtifacts() {
   const d = document.getElementById('artifacts');
-  d.innerHTML = ''; 
-  
-  // SORT: Mythic First
-  // RarityIdx: common=0 ... mythic=5. Descending.
-  game.artifacts.sort((a,b) => b.rarityIdx - a.rarityIdx);
-  const grouped = {}; game.artifacts.forEach(a=>{ const k=a.typeId+'_'+a.rarityIdx; if(!grouped[k]) grouped[k]={...a, count:0}; grouped[k].count++; });
+  d.innerHTML = '';
+
+  game.artifacts.sort((a,b) => (b.rarity === 'mythic' ? 10 : b.rarityIdx) - (a.rarity === 'mythic' ? 10 : a.rarityIdx));
+
+  const grouped = {};
+  game.artifacts.forEach(a=>{
+      const key = a.rarity === 'mythic' ? a.id : `${a.typeId}_${a.rarityIdx}`;
+      if(!grouped[key]) grouped[key]={...a, count:0};
+      grouped[key].count++;
+  });
+
   Object.values(grouped).forEach(a=>{
-      const el = document.createElement('div'); el.className=`artifact ${a.rarity}`; el.innerText=a.name[0]; 
-      el.onmouseenter = (e) => showTooltip(e, `[${a.rarity.toUpperCase()}] ${a.name} x${a.count}\n${a.desc}`);
+      const el = document.createElement('div'); el.className=`artifact ${a.rarity}`; el.innerText=a.name[0];
+      let tooltipText = `[${a.rarity.toUpperCase()}] ${a.name} x${a.count}\n${a.desc}`;
+      el.onmouseenter = (e) => showTooltip(e, tooltipText);
       el.onmouseleave = hideTooltip;
       if(a.count>1) el.innerHTML+=`<div class="artifact-count">${a.count}</div>`; d.appendChild(el);
   });
@@ -1812,24 +1825,20 @@ function renderShop() {
     if(!t.unlocked) return;
     const currentCost = Math.floor(t.cost * (1 + 0.2 * game.towerCounts[t.id]));
     const b = document.createElement('button'); b.className = 'btn';
+    if(game && game.gold < currentCost) b.disabled = true;
     if(selectDef && selectDef.id === t.id) b.style.borderColor = '#fff';
     b.innerHTML = `${t.name}<br><span style="font-size:0.8em;opacity:0.7">${currentCost} CR</span>`;
-    
-    // WEAPON TOOLTIP
-    let stats = `[${t.name}]\nDMG: ${t.dmg} | RNG: ${t.range} | SPD: ${(1/t.fire).toFixed(1)}/s\n`;
+
+    let stats = `<strong style="color:${t.color}">[${t.name}]</strong>\nDMG: ${t.dmg} | RNG: ${t.range} | SPD: ${(1/t.fire).toFixed(1)}/s\n`;
     if(t.type === 'pierce') stats += `Pierce: ${t.pierce}`;
-    else if(t.type === 'aoe') stats += `AOE Blast`;
-    else if(t.type 
-      === 'aoe_prox') stats += `Proximity AOE`;
-    else if(t.type === 'charge_shot') stats += `Charge Shot`;
-    else if(t.type === 'support') stats += `Buffs Neighbors`;
-    else stats += `Single Target`;
+    else if(t.type === 'aoe' || t.type === 'aoe_prox') stats += `Type: AOE`;
+    else if(t.type === 'charge_shot') stats += `Type: Charge Shot`;
+    else if(t.type === 'support') stats += `Type: Support (Buffs Neighbors)`;
+    else stats += `Type: Single Target`;
 
     b.onmouseenter = (e) => showTooltip(e, stats);
     b.onmouseleave = hideTooltip;
-
-    b.onclick = () => { selectDef = t; selectedTower = null; renderShop();
-    };
+    b.onclick = () => { selectDef = t; selectedTower = null; renderShop(); };
     c.appendChild(b);
   });
 }
@@ -1838,7 +1847,7 @@ function buyTech(type) {
   if(game.gold >= cost) {
     game.gold -= cost;
     if(type === 'life') { game.life = Math.min(game.life + 5, game.maxLife);
-    game.techCost[type] = Math.floor(game.techCost[type] * 1.5); } 
+    game.techCost[type] = Math.floor(game.techCost[type] * 1.5); }
     else {
       if(type==='dmg') game.globalMult.dmg += 0.1;
       if(type==='range') game.globalMult.range += 0.1;
@@ -1868,40 +1877,40 @@ canvas.addEventListener('click', () => {
   if(gx<0 || gx>=GRID_W || gy<0 || gy>=GRID_H) return;
 
   const clickedTower = game.towers.find(t => t.x===gx && t.y===gy);
-  
-  if(selectDef) { // Buy
-      if(game.path.some(p => p.x===gx && p.y===gy) || game.blocked.some(b => b.x===gx && b.y===gy)) { log("INVALID POS"); return; }
-      if(clickedTower) { log("OCCUPIED"); return; }
-    
+
+  if(selectDef) {
+      if(game.path.some(p => p.x===gx && p.y===gy) || game.blocked.some(b => b.x===gx && b.y===gy) || clickedTower) { log("INVALID POSITION"); return; }
       const cost = getTowerCost(selectDef.id);
       if(game.gold >= cost) {
-        game.gold -= cost; game.towerCounts[selectDef.id]++; 
-        // NEW: Apply Tier Bonus on Purchase
+        game.gold -= cost; game.towerCounts[selectDef.id]++;
         const startTier = 1 + (game.globalMult.tierBonus || 0);
         game.towers.push(new Tower(gx, gy, selectDef, startTier));
-        spawnParticles((gx+0.5)*TILE+offX, (gy+0.5)*TILE+offY, '#2ee6ff', 8); renderShop();
+        spawnParticles((gx+0.5), (gy+0.5), '#2ee6ff', 8); renderShop();
       } else log("NO CREDITS");
       return;
   }
-  if(clickedTower) { // Merge
+  if(clickedTower) {
       if(selectedTower && selectedTower !== clickedTower && selectedTower.def.id === clickedTower.def.id && selectedTower.tier === clickedTower.tier) {
           clickedTower.tier++;
           game.towers = game.towers.filter(t => t !== selectedTower);
-          spawnParticles((clickedTower.x+0.5)*TILE+offX, (clickedTower.y+0.5)*TILE+offY, '#fff', 20); selectedTower = null; 
+          spawnParticles((clickedTower.x+0.5), (clickedTower.y+0.5), '#fff', 20, 2.0);
+          selectedTower = null;
           if(saveData.unlocked.includes('art_merge_bonus_perm')) game.globalMult.dmg += 0.01;
       } else { selectedTower = clickedTower; }
   } else { selectedTower = null; }
 });
-window.addEventListener('keydown', e => { 
+window.addEventListener('keydown', e => {
     if(e.code==='Escape') {
         if(selectDef || selectedTower) { selectDef = null; selectedTower = null; renderShop(); }
     }
-    if(e.code==='Enter' && !document.getElementById('gameScreen').classList.contains('hidden') && !game.paused) triggerWave(); 
+    if(e.code==='Enter' && document.activeElement.id !== 'secretCode' && !document.getElementById('gameScreen').classList.contains('hidden') && !game.paused) {
+        e.preventDefault();
+        triggerWave();
+    }
 });
-// Initialization
 window.onload = function() {
     loadSave();
-    returnToMenu(); 
+    returnToMenu();
 };
 
 </script>
