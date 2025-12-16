@@ -1,0 +1,482 @@
+・初期Pathが進んだ状態で出現するエネミーの追加
+HPは基本の12倍でほとんど進まないが徐々に進行
+
+・イベントシステム
+5ウェーブの間　敵がアーマーを取得するイベント(ウェーブレベルによってアーマー量は動的に変化)
+16. NIGHT VISION（5W）
+画面が薄暗くなり、敵の可視範囲縮小
+→ Sniperが“優遇”
+17. MAGNETIC DISTORTION（4W）
+敵が進むたびに位置が微妙に揺れる
+→ AOEが当たりやすくなるが単体精度は下がる
+18. ANOMALY RIFT（3W）
+全敵が断続的に透明化（50%当たらない）
+→ DPSより多段・爆発が重要になる
+22. TITAN RAGE（1W）
+ボスが途中で1回進化する（HP +25%）
+23. HYPER RIFT（3W）
+敵が 1.5倍速になる代わりに Gold x3
+→ 取るか逃げるかのハイリスクイベント
+
+イベントシステムにポイントをかざすとイベント詳細が表示
+イベントは同時に複数発生しない
+
+・アーティファクト
+「Assassin Scope」
+HP満タンの敵へ 最大で+30% DMG
+HP20%以下の敵へも 最大で+20%（実質フィニッシャー）
+「Echo Round」
+同じ敵に命中すると、
+0.25秒後に追加ダメージ（最大で50%）が発生。
+
+これらの数値はアーティファクトの強化で段階的に開放
+→コモンやアンコモンなどの数値を弱体化調整
+
+アーティファクトリストのミシックレアが複数存在したとき別種類のミシックでも同種類として扱われている
+→種別でアーティファクトリストの一枠を占用する。
+同ゲームで一度取得した種類のミシックレアは再び出現しない
+
+コード入力時＋エンターで処理判定
+
+ミシックレアに最高レアレアリティIDをつけて最上位にソートする
+
+
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>Hyper Rogue TD Neo - Ver.0.2.1</title>
+<style>
+  :root{
+    --bg:#050914;
+    --panel:#0f1724; --accent:#2ee6ff;
+    --common:#b0b0b0; --uncommon:#44ff44;
+    --rare:#2e8cff; --epic:#a335ee; --legend:#ffaa00;
+    --mythic:#ff0055; --danger:#ff4d4d;
+    --text-main:#eaf6ff;
+    --shadow-text: 2px 2px 0px rgba(0,0,0,0.8);
+  }
+  html,body{height:100%;margin:0;font-family:'Courier New', sans-serif;background:var(--bg);color:var(--text-main);overflow:hidden;user-select:none;}
+  
+  /* --- LAYOUT --- */
+  .screen {
+    position:absolute;
+    top:0; left:0; width:100%; height:100%;
+    background:var(--bg); z-index:10;
+    display:flex; flex-direction:column;
+  }
+  .hidden {display:none !important;}
+
+  /* GAME SCREEN */
+  #gameScreen {
+    display:flex;
+    flex-direction:row;
+    height:100vh; gap:12px; padding:12px; box-sizing:border-box;
+    position:relative;
+  }
+
+  /* LEFT SIDE */
+  #left {
+    flex:1; display:flex;
+    flex-direction:column; gap:0; position:relative;
+    height: 100%; border-radius:8px; overflow: hidden;
+    box-shadow:inset 0 0 20px rgba(0,0,0,0.8);
+  }
+  canvas {
+    background:#070b1a; display:block; width:100%; height:100%;
+    cursor:crosshair;
+  }
+
+  /* RIGHT SIDE */
+  #right {
+    width:360px; display:flex; flex-direction:column; gap:8px; z-index:5;
+    height: 100%;
+  }
+  .panel{
+    background:rgba(12, 18, 28, 0.95); padding:10px; border-radius:6px; border:1px solid #23344a;
+    display:flex; flex-direction:column; gap:5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+  .panel.grow { flex: 1; min-height: 0;
+  } 
+
+  /* --- UI COMPONENTS --- */
+  h3{
+      margin:0 0 5px 0;
+      font-size:0.85rem; color:var(--accent); 
+      border-bottom:1px solid #23344a; padding-bottom:5px; 
+      display:flex; justify-content:space-between; text-shadow: 1px 1px 0 #000;
+  }
+  
+  .btn {background:linear-gradient(180deg, #1a273a, #0f1724);border:1px solid var(--accent);color:var(--accent);padding:8px;cursor:pointer;border-radius:4px;transition:0.2s;font-weight:bold;font-family:inherit;
+    text-shadow: 1px 1px 0 #000;}
+  .btn:hover {background:var(--accent);color:#000;box-shadow:0 0 10px var(--accent);
+    text-shadow: none;}
+  .btn:disabled {border-color:#555;color:#555;pointer-events:none;background:#111;}
+  
+  .btn-big {padding:15px 40px; font-size:1.2rem; margin-top:30px; margin-bottom: 50px;}
+  .btn-danger {border-color:var(--danger);
+    color:var(--danger);}
+  .btn-danger:hover {background:var(--danger); color:#000; box-shadow:0 0 10px var(--danger);}
+
+  /* HUD */
+  #hud {
+    position:absolute;
+    top:10px; left:10px; right:10px; height:40px;
+    display:flex; gap:15px; pointer-events:none; z-index: 100;
+  }
+  .stat {background:rgba(15,23,36,0.9);padding:5px 15px;border-radius:4px;border:1px solid rgba(46,230,255,0.3);backdrop-filter:blur(4px);pointer-events:auto; height: 100%;
+    box-sizing: border-box;}
+  .label {font-size:0.6rem;color:var(--accent);opacity:0.8;letter-spacing:1px; text-shadow: 1px 1px 0 #000;}
+  .val {font-size:1.1rem;font-weight:bold;color:#fff;
+    text-shadow: 2px 2px 0 #000;}
+  .controls {pointer-events:auto; display:flex; gap:10px; align-items:center;}
+  
+  .speed-ctrl { display:flex; gap:2px; background:#000; border-radius:4px;
+    overflow:hidden; border:1px solid #444; }
+  .spd-btn { background:#111; color:#888; border:none; padding:5px 10px; font-size:0.8rem; cursor:pointer; font-weight:bold;
+  }
+  .spd-btn.active { background:var(--accent); color:#000; }
+
+  /* OVERLAYS */
+  #pauseOverlay, #modalOverlay, #newsOverlay, #retryOverlay, #gameOverOverlay {
+    position:absolute;
+    top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); z-index:150;
+    display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px;
+  }
+  #modalOverlay { z-index: 2000;
+  }
+  #retryOverlay { background: rgba(50, 0, 0, 0.8); z-index: 3000; }
+  #gameOverOverlay { z-index: 4000; background: rgba(0,0,0,0.95); }
+  
+  .retry-title { font-size: 2.5rem;
+    color: var(--danger); font-weight: bold; text-shadow: 0 0 20px var(--danger); animation: pulseRed 0.5s infinite alternate; }
+  .retry-sub { font-size: 1.0rem;
+    color: #fff; margin-top: 10px; }
+  .pause-title {font-size:3rem; color:var(--accent); letter-spacing:5px;
+    text-shadow:0 0 15px var(--accent);}
+  
+  .go-title { font-size: 4rem; color: var(--danger); letter-spacing: 5px; text-shadow: 0 0 20px var(--danger); margin-bottom: 20px; }
+  .go-stat { font-size: 1.5rem; color: #fff; }
+  .go-cf { font-size: 1.2rem; color: var(--legend); margin-top: 10px; }
+
+  /* EVENT HUD */
+  #eventHud {
+      position: absolute; top: 60px; left: 10px; z-index: 90;
+      display: flex; flex-direction: column; gap: 5px; pointer-events: none;
+  }
+  .event-tag {
+      background: rgba(100, 0, 200, 0.7); border: 1px solid #d000ff;
+      padding: 5px 10px; border-radius: 4px; color: #fff; font-size: 0.8rem;
+      text-shadow: 0 0 5px #d000ff; animation: pulseEvent 1s infinite alternate;
+      cursor: pointer; pointer-events: auto;
+  }
+  .event-tag.nerf { background: rgba(200, 50, 0, 0.7); border-color: #ff4d4d; text-shadow: 0 0 5px #ff0000; }
+  .event-tag.mixed { background: rgba(200, 150, 0, 0.7); border-color: #ffaa00; text-shadow: 0 0 5px #ff8800; }
+  @keyframes pulseEvent { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.05); opacity: 1; } }
+
+  /* BOSS HUD */
+  #bossHud {
+    position:absolute; top:60px; left:50%; transform:translateX(-50%); width:70%;
+    z-index:90; display:flex; flex-direction:column; align-items:center; pointer-events:none;
+    text-shadow:0 0 5px #000; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; border: 1px solid var(--danger);
+  }
+  .boss-warning { font-size: 1.0rem; color: var(--danger); font-weight: bold; letter-spacing: 3px; animation: blink 1s infinite; margin-bottom: 5px;
+  }
+  .boss-bar-bg {width:100%; height:16px; background:#300; border:1px solid #500; border-radius:4px; overflow:hidden; position:relative;}
+  .boss-bar-fill {height:100%; background:linear-gradient(90deg, #f00, #a00); width:0%;
+    transition:width 0.1s;}
+  .boss-val {font-size:0.9rem; color:#fff; margin-top:2px; font-weight: bold;}
+  
+  /* GOLD RUSH OVERLAY */
+  #goldRushOverlay {
+    position: absolute;
+    top: 150px; left: 50%; transform: translateX(-50%);
+    color: #ffd700; font-size: 2rem; font-weight: bold;
+    text-shadow: 0 0 20px #ffd700, 2px 2px 0 #000;
+    z-index: 80; pointer-events: none;
+    animation: flashGold 0.5s infinite alternate;
+  }
+  
+  /* ANIMATIONS */
+  @keyframes flashGold { 0% { opacity: 0.6; transform: translateX(-50%) scale(1);
+  } 100% { opacity: 1; transform: translateX(-50%) scale(1.1); } }
+  @keyframes pulseRed { 0% { opacity: 0.7;
+  } 100% { opacity: 1.0; } }
+  @keyframes blink { 50% { opacity: 0.5;
+  } }
+
+  /* MENU SCREEN */
+  #upgradeScreen {padding:20px; overflow-y:auto; align-items:center; background:var(--bg);}
+  .header {width:100%; max-width:1000px; display:flex; justify-content:space-between; align-items:flex-end;
+    border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:20px;}
+  .cf-display {font-size:1.5rem; color:var(--legend); font-weight:bold; text-shadow:0 0 10px var(--legend);}
+  .tabs {display:flex; gap:10px;
+    margin-bottom:15px;}
+  .tab-btn {background:#111; border:1px solid #444; color:#888; padding:8px 20px; cursor:pointer; transition:0.2s;}
+  .tab-btn.active {background:var(--accent); color:#000; border-color:var(--accent);
+    font-weight:bold;}
+  .tree-container {display:flex; flex-wrap:wrap; gap:15px; max-width:1000px; justify-content:center; padding-bottom: 20px;}
+  .skill-node { width:220px; background:#0f1724; border:1px solid #333; padding:10px; border-radius:4px;
+    display:flex; flex-direction:column; gap:4px; transition:0.2s; position:relative; opacity:0.6; }
+  .skill-node.unlocked {border-color:var(--accent); opacity:1.0; box-shadow:0 0 5px var(--accent);}
+  .skill-node.affordable {border-color:var(--legend); opacity:0.9;
+    cursor:pointer;}
+  .skill-node.affordable:hover {transform:translateY(-3px); box-shadow:0 0 10px var(--legend);}
+  .skill-name {font-weight:bold; color:var(--accent); font-size:0.9rem;}
+  .skill-desc {font-size:0.7rem; color:#ccc;
+    min-height:30px;}
+  .skill-cost {font-size:0.8rem; color:var(--legend); text-align:right;}
+  .skill-owned {position:absolute; top:5px; right:5px; color:var(--accent);
+    font-size:1.2rem;}
+
+  /* STATS BOX */
+  .stats-box { background:rgba(15,23,36,0.95); border:1px solid #444; border-radius:8px; padding:15px; display:grid; grid-template-columns: repeat(4, 1fr);
+    gap:10px 20px; font-size:0.75rem; width:80%; max-width:800px; margin-bottom:20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+  .stat-item {display:flex; justify-content:space-between; border-bottom:1px solid #333;
+    padding-bottom:2px;}
+  .stat-name {color:#aaa;}
+  .stat-val {color:var(--accent); font-weight:bold;}
+
+  /* MISC UI */
+  .shop-grid {display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+  .tech-btn {font-size:0.75rem;
+    display:flex; justify-content:space-between; align-items:center;}
+  #artifacts {display:flex; flex-wrap:wrap; gap:6px; align-content: flex-start; overflow-y:auto; max-height:100%;}
+  .artifact { width:32px; height:32px; background:#111;
+    border:1px solid #444; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:10px; cursor:pointer; position:relative; transition:0.3s; font-weight: bold; }
+  .artifact:hover { border-color: #fff;
+    box-shadow: 0 0 5px #fff; }
+  .artifact-count {position: absolute; bottom: -5px; right: -5px; background: #000; color: #fff; font-size: 8px;
+    padding: 1px 3px; border-radius: 4px; border: 1px solid #555; pointer-events: none;}
+  
+  /* GLOBAL TOOLTIP */
+  #globalTooltip { position: absolute;
+    pointer-events: none; z-index: 9999; background: rgba(0,0,0,0.95); border: 1px solid var(--accent); padding: 10px; border-radius: 4px; color: #fff; font-size: 0.75rem; white-space: pre-wrap;
+    max-width: 250px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); display: none; line-height: 1.4;
+  }
+
+  /* SECRET INPUT */
+  #secretCode { position: fixed; bottom: 15px; right: 15px; width: 100px; background: rgba(0,0,0,0.8);
+    border: 1px solid #444; color: #aaa; font-family: monospace; font-size: 0.8rem; text-align: center; padding: 5px; opacity: 0.5; transition: 0.3s; z-index: 10000;
+  }
+  #secretCode:hover, #secretCode:focus { opacity: 1.0; color: var(--accent); border-color: var(--accent);
+  }
+  
+  /* NEWS BUTTON (5% from Right) */
+  #newsBtn { position: absolute; top: 15px; right: 5%;
+    background: var(--panel); border: 1px solid var(--accent); color: var(--accent); padding: 5px 15px; cursor: pointer; font-size: 0.8rem; font-weight: bold; z-index: 100;
+  }
+  #newsBtn:hover { background: var(--accent); color: #000; }
+
+  /* CARDS & RARITIES */
+  .card-container {display:flex;gap:15px;margin-top:20px;flex-wrap:wrap;justify-content:center;max-width: 90%;
+    max-height: 80vh; overflow-y: auto;}
+  .card { width:180px; padding:15px; border-radius:8px; cursor:pointer; transition:0.3s; display:flex; flex-direction:column; justify-content:space-between; position:relative; overflow:hidden;
+    border: 2px solid #444; background: #111; background-image: radial-gradient(#ffffff05 1px, transparent 1px); background-size: 10px 10px; }
+  .card:hover { transform:translateY(-10px);
+    box-shadow:0 0 25px rgba(255,255,255,0.2); }
+  .card h4 {margin:0 0 8px 0; color:#fff; font-size:0.95rem;
+    text-shadow: 1px 1px 2px #000;}
+  .card p {font-size:0.75rem; color:#ddd; line-height:1.4;
+    text-shadow: 1px 1px 1px #000;}
+
+  /* Rarity Colors */
+  .common { border-color: var(--common); color: var(--common);
+  }
+  .card.common { background: linear-gradient(135deg, #222, #333); }
+  .uncommon { border-color: var(--uncommon); color: var(--uncommon);
+    box-shadow: 0 0 2px var(--uncommon); }
+  .card.uncommon { background: linear-gradient(135deg, #0a1f0a, #143314); border-color: var(--uncommon);
+  }
+  .rare { border-color: var(--rare); color: var(--rare); box-shadow: 0 0 4px var(--rare);
+  }
+  .card.rare { background: linear-gradient(135deg, #0a0a2e, #14144d); border-color: var(--rare); }
+  .epic { border-color: var(--epic); color: var(--epic);
+    box-shadow: 0 0 6px var(--epic); }
+  .card.epic { background: linear-gradient(135deg, #1f0a2e, #33144d); border-color: var(--epic);
+  }
+  .legendary { border-color: var(--legend); color: var(--legend); box-shadow: 0 0 8px var(--legend); animation: pulseLeg 2s infinite;
+  }
+  .card.legendary { background: linear-gradient(135deg, #2e1f0a, #4d3314); border-color: var(--legend); }
+  .mythic { border-color: var(--mythic); color: var(--mythic);
+    box-shadow: 0 0 10px var(--mythic); animation: pulseMy 1.5s infinite; }
+  .card.mythic { background: linear-gradient(135deg, #2e0a14, #4d1429); border-color: var(--mythic);
+  }
+  
+  .card.starter { border-color: #fff; background: linear-gradient(135deg, #111, #222); height: 160px; width: 150px;
+  }
+  .card.starter:hover { border-color: var(--accent); box-shadow: 0 0 15px var(--accent);
+  }
+  
+  @keyframes pulseLeg {0%{box-shadow:0 0 5px var(--legend);} 50%{box-shadow:0 0 20px var(--legend);} 100%{box-shadow:0 0 5px var(--legend);}}
+  @keyframes pulseMy {0%{box-shadow:0 0 5px var(--mythic);} 50%{box-shadow:0 0 25px var(--mythic);} 100%{box-shadow:0 0 5px var(--mythic);}}
+
+  /* NEWS PANEL */
+  .news-panel { background: #0f1724;
+    border: 1px solid var(--accent); border-radius: 8px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 0 30px rgba(46,230,255,0.2); }
+  .news-header { font-size: 1.5rem; color: var(--accent); margin-bottom: 15px; border-bottom: 1px solid #333;
+    padding-bottom: 10px; }
+  .news-content { font-size: 0.9rem; line-height: 1.6; color: #ddd; }
+  .news-content li { margin-bottom: 8px;
+  }
+
+  /* DPS METER & LOG LAYOUT */
+  #dpsMeter { position:absolute; bottom:10px; left:10px; width:200px; background:rgba(0,0,0,0.8); border:1px solid #444;
+    border-radius:6px; padding:8px; pointer-events:none; font-size:0.7rem; display:flex; flex-direction:column; gap:4px; z-index: 50; }
+  .dps-row {display:flex; align-items:center; gap:5px;}
+  .dps-bar-bg {flex:1; height:6px; background:#222;
+    border-radius:3px; overflow:hidden;}
+  .dps-bar-fill {height:100%; background:var(--accent); transition:width 0.5s;}
+
+  /* LOG OVERLAY (Center-Right) */
+  #ingameLog {
+    position:absolute;
+    bottom:10px; left: 65%; transform: translateX(-50%); 
+    width:450px; height:60px; background:rgba(0,0,0,0.6); border:1px solid #444; border-radius:6px;
+    padding:5px 10px; pointer-events:none; font-size:0.7rem; font-family: monospace; color:#ccc;
+    display:flex;
+    flex-direction:column; justify-content:flex-end; overflow:hidden;
+    z-index: 50; pointer-events: auto; text-shadow: 1px 1px 0 #000;
+  }
+  #logContent { overflow-y: auto; max-height: 100%;
+    display: flex; flex-direction: column-reverse;}
+  .log-entry { margin-bottom: 1px; border-left: 2px solid #555; padding-left: 5px; background: rgba(0,0,0,0.3);
+  }
+
+</style>
+</head>
+<body>
+
+<div id="globalTooltip"></div>
+
+<input type="password" id="secretCode" placeholder="CODE">
+
+<div id="newsOverlay" class="screen hidden">
+    <div class="news-panel">
+        <div class="news-header">PATCH NOTES: Ver.0.2.1</div>
+        <div class="news-content">
+            <ul>
+                <li><strong>[NEW] MONOLITH Enemy:</strong> Ultra-tank that spawns mid-path (Wave 20+).</li>
+                <li><strong>[NEW] 8 Event Types:</strong> Armor Surge, Night Vision, Magnetic Field, Anomaly Rift, Titan Rage, Hyper Rift + existing events.</li>
+                <li><strong>[NEW] Artifacts:</strong> Assassin Scope (HP-based DMG) & Echo Round (delayed DMG).</li>
+                <li><strong>[FIX] Mythic System:</strong> Each mythic now tracked separately - no duplicates in same run.</li>
+                <li><strong>[FIX] Code Input:</strong> Now requires Enter key to submit.</li>
+                <li><strong>[BALANCE] Artifact Values:</strong> Rebalanced for better progression curve.</li>
+            </ul>
+        </div>
+        <button class="btn btn-big" onclick="closeNews()">ACKNOWLEDGE</button>
+    </div>
+</div>
+
+<div id="upgradeScreen" class="screen">
+  <div class="header">
+    <div>
+      <h1 style="margin:0; text-shadow:0 0 10px var(--accent);">SYSTEM CORE // UPGRADE</h1>
+      <div style="color:#666; font-size:0.8rem;">HYPER ROGUE TD NEO - Ver.0.2.1</div>
+    </div>
+    <div class="cf-display">CORE FRAGMENTS: <span id="cfVal">0</span></div>
+  </div>
+  
+  <button id="newsBtn" onclick="openNews()">NEWS</button>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('nexus_core')">NEXUS CORE</button>
+    <button class="tab-btn" onclick="switchTab('artifact_mastery')">ARTIFACTS</button>
+    <button class="tab-btn" onclick="switchTab('weapon_system')">WEAPONS</button>
+    <button class="tab-btn" onclick="switchTab('paradox')">PARADOX</button>
+  </div>
+
+  <div id="treeView" class="tree-container"></div>
+
+  <button class="btn btn-big" onclick="startGameFromMenu()">INITIALIZE MISSION</button>
+</div>
+
+<div id="gameOverOverlay" class="screen hidden">
+  <div class="go-title">MISSION FAILED</div>
+  <div class="go-stat">WAVES CLEARED: <span id="goWave">0</span></div>
+  <div class="go-cf">CORE FRAGMENTS GAINED: +<span id="goCf">0</span></div>
+  <button class="btn btn-big" onclick="returnToMenu()">RETURN TO SYSTEM</button>
+</div>
+
+<div id="gameScreen" class="screen hidden">
+  <div id="left">
+    <div id="flashOverlay" class="hidden"></div>
+    
+    <canvas id="c"></canvas>
+    
+    <div id="eventHud"></div>
+
+    <div id="bossHud" class="hidden">
+      <div class="boss-label">⚠ ANOMALY DETECTED ⚠</div>
+      <div class="boss-bar-bg"><div class="boss-bar-fill" id="bossBarFill"></div></div>
+      <div class="boss-val" id="bossHpVal"></div>
+    </div>
+    
+    <div id="goldRushOverlay" class="hidden">GOLD RUSH!!</div>
+
+    <div id="retryOverlay" class="hidden">
+        <div class="retry-title">WARNING</div>
+        <div class="retry-sub">BREACH DETECTED / RETRYING...</div>
+    </div>
+
+    <div id="pauseOverlay" class="hidden">
+      <div class="pause-title">PAUSED</div>
+      <div id="pauseStats" class="stats-box"></div>
+      <button class="btn btn-big" onclick="togglePause()">RESUME</button>
+      <button class="btn btn-big btn-danger" onclick="retireGame()">RETIRE (GIVE UP)</button>
+    </div>
+
+    <div id="hud">
+      <div class="stat"><div class="label">CREDITS</div><div class="val" id="gold">0</div></div>
+      <div class="stat"><div class="label">INTEGRITY</div><div class="val" id="life">20</div></div>
+      <div class="stat"><div class="label">WAVE</div><div class="val" id="wave">0</div></div>
+      <div class="stat hidden" id="goldRushInd"><div class="label">BONUS</div><div class="val" style="color:#ffd700;font-size:0.9rem;">GOLD RUSH</div></div>
+      
+      <div class="stat" style="display:flex;
+        align-items:center; gap:5px; padding:0 10px;">
+          <div class="label">SPEED</div>
+          <div class="speed-ctrl">
+              <button class="spd-btn active" id="btnSpd1" onclick="setSpeed(1)">x1</button>
+              <button class="spd-btn" id="btnSpd15" onclick="setSpeed(1.5)">x1.5</button>
+              <button class="spd-btn" id="btnSpd2" onclick="setSpeed(2)">x2</button>
+          </div>
+      </div>
+
+      <div style="flex:1"></div>
+      <div class="controls">
+        <div class="switch-container" style="background:rgba(0,0,0,0.5);padding:5px;border-radius:4px;display:flex;gap:5px;">
+          <input type="checkbox" id="autoStartCheck">
+          <label for="autoStartCheck" style="font-size:0.7rem;cursor:pointer;">AUTO START</label>
+        </div>
+        <button class="btn" onclick="togglePause()" style="font-family:monospace;
+          font-weight:bold;">||</button>
+        <button id="nextWaveBtn" class="btn" onclick="triggerWave()">START [ENTER]</button>
+      </div>
+    </div>
+    
+    <div id="dpsMeter">
+      <div style="text-align:center;
+        color:#888; margin-bottom:4px;">DPS MONITOR</div>
+      <div id="dpsList"></div>
+    </div>
+
+    <div id="ingameLog">
+       <div id="logContent"></div>
+    </div>
+  </div>
+
+  <div id="right">
+    <div class="panel">
+      <h3>WEAPON SHOP</h3>
+      <div id="shopList" class="shop-grid"></div>
+      <div style="font-size:0.65rem;text-align:center;color:#666;margin-top:3px;">Cost increases per purchase</div>
+    </div>
+    
+    <div class="panel">
+      <h3>TECH UPGRADES</h3>
+      <div class="shop-grid">
+        <button class="btn tech-btn" onmouseenter="showTechTooltip('dmg', this)" onmouseleave="hideTooltip()" onclick="buyTech('dmg')"><span>DMG++</span><span id="cost_dmg">100</span></button>
+        <button class="btn tech-btn" onmouseenter="showTechTooltip('range', this)" onm
